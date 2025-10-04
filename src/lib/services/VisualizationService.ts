@@ -185,7 +185,7 @@ class ComprehensiveVisualizationService implements VisualizationService {
           const result = await response.json();
           if (result.imageData?.svgCode) {
             images.push({
-              url: `data:image/svg+xml;base64,${btoa(result.imageData.svgCode)}`,
+              url: `data:image/svg+xml;base64,${this.safeBase64Encode(result.imageData.svgCode)}`,
               title: `Generated Visualization: ${query}`,
               description: result.imageData.description || `AI-generated visualization for ${query}`,
               source: 'generated',
@@ -220,8 +220,11 @@ class ComprehensiveVisualizationService implements VisualizationService {
 
     svgTypes.forEach(({ type, title }) => {
       const svg = this.generateCustomSVG(query, type);
+      // Use proper Unicode-safe base64 encoding
+      const base64Svg = this.safeBase64Encode(svg);
+      
       images.push({
-        url: `data:image/svg+xml;base64,${btoa(svg)}`,
+        url: `data:image/svg+xml;base64,${base64Svg}`,
         title: `${title}: ${query}`,
         description: `Custom ${type} visualization for ${query}`,
         source: 'svg',
@@ -238,22 +241,24 @@ class ComprehensiveVisualizationService implements VisualizationService {
 
     // Generate concept-specific visualizations
     if (queryLower.includes('architecture') || queryLower.includes('system')) {
+      const architectureSVG = this.generateArchitectureSVG(query);
       conceptualSVGs.push({
-        url: `data:image/svg+xml;base64,${btoa(this.generateArchitectureSVG(query))}`,
+        url: `data:image/svg+xml;base64,${this.safeBase64Encode(architectureSVG)}`,
         title: `Architecture Overview: ${query}`,
         description: `System architecture visualization for ${query}`,
         source: 'svg',
-        svgCode: this.generateArchitectureSVG(query)
+        svgCode: architectureSVG
       });
     }
 
     if (queryLower.includes('comparison') || queryLower.includes('vs')) {
+      const comparisonSVG = this.generateComparisonSVG(query);
       conceptualSVGs.push({
-        url: `data:image/svg+xml;base64,${btoa(this.generateComparisonSVG(query))}`,
+        url: `data:image/svg+xml;base64,${this.safeBase64Encode(comparisonSVG)}`,
         title: `Comparison Chart: ${query}`,
         description: `Side-by-side comparison for ${query}`,
         source: 'svg',
-        svgCode: this.generateComparisonSVG(query)
+        svgCode: comparisonSVG
       });
     }
 
@@ -383,17 +388,17 @@ class ComprehensiveVisualizationService implements VisualizationService {
     elements += `<circle cx="400" cy="300" r="60" fill="url(#accentGradient)" opacity="0.6"/>`;
     elements += `<circle cx="400" cy="300" r="40" fill="url(#accentGradient)"/>`;
     
-    // Surrounding elements
+    // Surrounding elements with SVG-safe icons
     const positions = [
-      { x: 200, y: 200, icon: '📊' },
-      { x: 600, y: 200, icon: '📈' },
-      { x: 200, y: 400, icon: '💡' },
-      { x: 600, y: 400, icon: '🎯' }
+      { x: 200, y: 200, icon: 'CHART', color: '#0ea5e9' },
+      { x: 600, y: 200, icon: 'TREND', color: '#14b8a6' },
+      { x: 200, y: 400, icon: 'IDEA', color: '#f97316' },
+      { x: 600, y: 400, icon: 'TARGET', color: '#8b5cf6' }
     ];
     
     positions.forEach((pos) => {
-      elements += `<circle cx="${pos.x}" cy="${pos.y}" r="50" fill="#334155" stroke="#0ea5e9" stroke-width="3"/>`;
-      elements += `<text x="${pos.x}" y="${pos.y + 8}" text-anchor="middle" font-size="24">${pos.icon}</text>`;
+      elements += `<circle cx="${pos.x}" cy="${pos.y}" r="50" fill="#334155" stroke="${pos.color}" stroke-width="3"/>`;
+      elements += `<text x="${pos.x}" y="${pos.y + 6}" text-anchor="middle" fill="${pos.color}" font-size="14" font-weight="bold">${pos.icon}</text>`;
       
       // Connect to center
       elements += `<line x1="${pos.x}" y1="${pos.y}" x2="400" y2="300" stroke="#64748b" stroke-width="2" opacity="0.5"/>`;
@@ -463,6 +468,36 @@ class ComprehensiveVisualizationService implements VisualizationService {
   private generateComparisonSVG(query: string): string {
     // Generate comparison chart
     return this.generateCustomSVG(query, 'comparison');
+  }
+
+  private safeBase64Encode(str: string): string {
+    try {
+      // For browser environment, use TextEncoder for Unicode safety
+      if (typeof window !== 'undefined' && typeof TextEncoder !== 'undefined') {
+        const encoder = new TextEncoder();
+        const uint8Array = encoder.encode(str);
+        const binaryString = Array.from(uint8Array, byte => String.fromCharCode(byte)).join('');
+        return btoa(binaryString);
+      }
+      
+      // For Node.js environment, use Buffer (which handles Unicode properly)
+      if (typeof Buffer !== 'undefined') {
+        return Buffer.from(str, 'utf8').toString('base64');
+      }
+      
+      // Fallback: try to handle Unicode with btoa
+      // First encode as UTF-8, then base64
+      const utf8Encoded = encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => {
+        return String.fromCharCode(parseInt(p1, 16));
+      });
+      return btoa(utf8Encoded);
+      
+    } catch (error) {
+      console.warn('Base64 encoding failed, using fallback:', error);
+      // Last resort: remove problematic characters and try again
+      const cleanStr = str.replace(/[^\x00-\x7F]/g, ''); // Remove non-ASCII
+      return btoa(cleanStr);
+    }
   }
 }
 

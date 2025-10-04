@@ -1,6 +1,3 @@
-import { classifierAgent } from "@/lib/langchain/agents/classifier";
-import { retrieverAgent } from "@/lib/langchain/agents/retriever";
-import { summarizerAgent } from "@/lib/langchain/agents/summarizer";
 import { dashboardSchema } from "@/lib/schemas/dashboard";
 import { logQuery } from "@/lib/appwrite/database";
 import { userMemoryManager, type MemorySearchResult } from "@/lib/memory/user-memory";
@@ -13,8 +10,9 @@ export async function processQueryWithMemory(
   
   // Check if memory system is available
   if (!userMemoryManager.isMemoryEnabled()) {
-    console.log("[Pipeline] Memory system disabled, processing query without memory");
-    return processQueryWithoutMemory(query, userId);
+    console.log("[Pipeline] Memory system disabled, using LangChain agent without memory");
+    const { executeLangChainAgent } = await import("./agents/langchain-agent");
+    return await executeLangChainAgent(query, userId);
   }
   
   let userContext = "";
@@ -67,23 +65,18 @@ export async function processQueryWithMemory(
     ? `${query}\n\n## User Context:\n${userContext}` 
     : query;
     
-  console.log(`[Pipeline] Processing query with user context for user ${userId}`);
-  
-  // Normal processing pipeline
-  const classification = await classifierAgent(enhancedQuery);
-  const context = await retrieverAgent(enhancedQuery, userId, classification);
-  const dashboard = await summarizerAgent({ 
-    query: enhancedQuery, 
-    context, 
-    classification
-  });
-  
-  // Add safety check for title length before validation
-  if (dashboard.title && dashboard.title.length > 120) {
-    dashboard.title = dashboard.title.substring(0, 117) + '...';
-  }
+    console.log(`[Pipeline] Processing query with LangChain multi-agent system for user ${userId}`);
   
   try {
+    // Use the new LangChain-based multi-agent system
+    const { executeLangChainAgent } = await import("./agents/langchain-agent");
+    const dashboard = await executeLangChainAgent(enhancedQuery, userId);
+    
+    console.log("[Pipeline] LangChain agent completed successfully");    // Add safety check for title length before validation
+    if (dashboard.title && dashboard.title.length > 120) {
+      dashboard.title = dashboard.title.substring(0, 117) + '...';
+    }
+    
     const validated = dashboardSchema.parse(dashboard);
     
     // Log the query
@@ -109,35 +102,31 @@ export async function processQueryWithMemory(
     }
 
     return validated;
+    
   } catch (error) {
-    console.error("[Pipeline] Validation error for dashboard:", error);
-    console.error("[Pipeline] Dashboard data that failed validation:", JSON.stringify(dashboard, null, 2));
+    console.error("[Pipeline] Multi-agent pipeline failed:", error);
+    console.error("[Pipeline] Error details:", error);
     throw error;
   }
 }
 
-// Process query without memory features
+// Process query without memory features using LangChain agents
 async function processQueryWithoutMemory(
   query: string, 
   userId: string
 ): Promise<DashboardOutput> {
-  console.log(`[Pipeline] Processing query without memory for user ${userId}`);
-  
-  // Normal processing pipeline without memory enhancement
-  const classification = await classifierAgent(query);
-  const context = await retrieverAgent(query, userId, classification);
-  const dashboard = await summarizerAgent({ 
-    query, 
-    context, 
-    classification
-  });
-  
-  // Add safety check for title length before validation
-  if (dashboard.title && dashboard.title.length > 120) {
-    dashboard.title = dashboard.title.substring(0, 117) + '...';
-  }
+  console.log(`[Pipeline] Processing query with LangChain agents (no memory) for user ${userId}`);
   
   try {
+    // Use the LangChain-based agent system
+    const { executeLangChainAgent } = await import("./agents/langchain-agent");
+    const dashboard = await executeLangChainAgent(query, userId);
+    
+    // Add safety check for title length before validation
+    if (dashboard.title && dashboard.title.length > 120) {
+      dashboard.title = dashboard.title.substring(0, 117) + '...';
+    }
+    
     const validated = dashboardSchema.parse(dashboard);
     
     // Log the query
@@ -148,9 +137,10 @@ async function processQueryWithoutMemory(
     });
 
     return validated;
+    
   } catch (error) {
-    console.error("[Pipeline] Validation error for dashboard:", error);
-    console.error("[Pipeline] Dashboard data that failed validation:", JSON.stringify(dashboard, null, 2));
+    console.error("[Pipeline] Multi-agent pipeline failed:", error);
+    console.error("[Pipeline] Error details:", error);
     throw error;
   }
 }

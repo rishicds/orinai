@@ -281,6 +281,19 @@ export function ChatInterfaceV2({ onDashboardGenerated, onUserAuthenticated, ini
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
+    
+    console.log("[ChatInterface] Submitting query:", input.substring(0, 100));
+    
+    // Validate query length
+    if (input.length > 1000) {
+      const errorMsg: ChatMessage = { 
+        id: Date.now().toString(), 
+        role: "assistant", 
+        content: "Your query is too long. Please keep it under 1000 characters." 
+      };
+      setMessages(prev => [...prev, errorMsg]);
+      return;
+    }
 
     // Generate a session ID if we don't have one (new chat)
     let activeSessionId = currentSessionId;
@@ -335,9 +348,13 @@ export function ChatInterfaceV2({ onDashboardGenerated, onUserAuthenticated, ini
       const progressPromise = simulateProgressSteps();
       
       // Make the actual API call with memory enabled
+      console.log("[ChatInterface] Making API call to /api/generate");
       const apiPromise = fetch("/api/generate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
         body: JSON.stringify({ 
           query: userMsg.content,
           useMemory: !!currentUser // Enable memory for authenticated users
@@ -354,10 +371,47 @@ export function ChatInterfaceV2({ onDashboardGenerated, onUserAuthenticated, ini
           if (errorData.error) {
             errorMessage = `Generation failed: ${errorData.error}`;
           }
-        } catch {
+        } catch (parseError) {
           // Fallback to status text if can't parse error response
+          console.warn("Could not parse error response:", parseError);
         }
-        throw new Error(errorMessage);
+        
+        // Log the error for debugging
+        console.error("API request failed:", { 
+          status: res.status, 
+          statusText: res.statusText, 
+          errorMessage 
+        });
+        
+        // Don't throw, instead handle the error gracefully
+        const errorMsg: ChatMessage = { 
+          id: Date.now().toString(), 
+          role: "assistant", 
+          content: `I encountered an error: ${errorMessage}. Please try again.` 
+        };
+        setMessages(prev => [...prev, errorMsg]);
+        
+        // Mark progress as error
+        setProgressSteps(prev => prev.map(step => ({ ...step, status: "error" as const })));
+        
+        // Save error message if user is authenticated
+        if (currentUser && activeSessionId) {
+          try {
+            await fetch("/api/chat", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ 
+                role: errorMsg.role, 
+                content: errorMsg.content,
+                sessionId: activeSessionId
+              })
+            });
+          } catch (saveError) {
+            console.error("Failed to save error message:", saveError);
+          }
+        }
+        
+        return; // Exit early instead of throwing
       }
 
       const dashboard = await res.json();
@@ -500,8 +554,34 @@ export function ChatInterfaceV2({ onDashboardGenerated, onUserAuthenticated, ini
         setMessages(prev => [...prev, errorMsg]);
         
         // Save error message if user is authenticated
-        if (currentUser && currentSessionId) {
-          saveChatMessage(errorMsg);
+        if (currentUser && activeSessionId) {
+          try {
+            const saveErrorMessage = async (message: ChatMessage) => {
+              try {
+                const response = await fetch("/api/chat", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ 
+                    role: message.role, 
+                    content: message.content,
+                    sessionId: activeSessionId
+                  })
+                });
+                
+                if (response.ok) {
+                  console.log("Error message saved successfully");
+                } else {
+                  console.error("Failed to save error message");
+                }
+              } catch (error) {
+                console.error("Failed to save error message:", error);
+              }
+            };
+            
+            saveErrorMessage(errorMsg);
+          } catch (saveError) {
+            console.error("Failed to save error message:", saveError);
+          }
         }
         
         setProgressSteps([]);

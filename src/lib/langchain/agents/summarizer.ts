@@ -7,7 +7,7 @@ import type {
 import { invokeAzureChat } from "@/lib/azure/model-router";
 import { queryMultipleAIServices } from "@/lib/ai/multi-service";
 
-type SummarizerParams = {
+export type SummarizerParams = {
   query: string;
   context: RetrievalResult | null;
   classification: ClassificationResult;
