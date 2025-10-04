@@ -23,15 +23,19 @@ export function MermaidRenderer({ diagram, title, className = "" }: MermaidRende
         
         mermaidInstance.initialize({
           startOnLoad: false,
-          theme: "dark",
+          theme: "base",
           themeVariables: {
             primaryColor: "#0ea5e9",
             primaryTextColor: "#ffffff",
             primaryBorderColor: "#1e293b",
             lineColor: "#64748b",
             background: "#0f172a",
-            darkMode: true
-          }
+            mainBkg: "#1e293b",
+            secondBkg: "#334155",
+            tertiaryColor: "#475569"
+          },
+          securityLevel: "loose",
+          fontFamily: "ui-sans-serif, system-ui, sans-serif"
         });
         
         setMermaid(mermaidInstance);
@@ -48,18 +52,52 @@ export function MermaidRenderer({ diagram, title, className = "" }: MermaidRende
     if (mermaid && diagram && containerRef.current) {
       const renderDiagram = async () => {
         try {
-          const id = `mermaid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-          const mermaidInstance = mermaid as { render: (id: string, diagram: string) => Promise<{ svg: string }> };
-          const { svg: renderedSvg } = await mermaidInstance.render(id, diagram);
-          setSvg(renderedSvg);
+          // Validate diagram syntax
+          if (!diagram.trim()) {
+            setError("Empty diagram");
+            return;
+          }
+
+          // Clear any previous content
+          setSvg("");
           setError("");
+          
+          const id = `mermaid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+          const mermaidInstance = mermaid as { 
+            parse: (text: string) => Promise<void>; 
+            render: (id: string, text: string) => Promise<{ svg: string }> 
+          };
+          
+          // Add timeout to prevent infinite rendering
+          const renderPromise = Promise.race([
+            (async () => {
+              await mermaidInstance.parse(diagram);
+              const result = await mermaidInstance.render(id, diagram);
+              return result;
+            })(),
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Rendering timeout')), 10000)
+            )
+          ]);
+          
+          const { svg: renderedSvg } = await renderPromise as { svg: string };
+          
+          if (renderedSvg) {
+            setSvg(renderedSvg);
+            setError("");
+          } else {
+            setError("Failed to generate diagram");
+          }
         } catch (err) {
           console.error("Mermaid rendering error:", err);
-          setError("Failed to render diagram");
+          const errorMessage = err instanceof Error ? err.message : "Failed to render diagram";
+          setError(`Diagram error: ${errorMessage}`);
         }
       };
 
-      renderDiagram();
+      // Add a small delay to ensure the container is ready
+      const timeoutId = setTimeout(renderDiagram, 100);
+      return () => clearTimeout(timeoutId);
     }
   }, [mermaid, diagram]);
 
@@ -68,11 +106,16 @@ export function MermaidRenderer({ diagram, title, className = "" }: MermaidRende
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className={`rounded-2xl border border-red-800 bg-red-900/20 p-8 ${className}`}
+        className={`rounded-xl border border-red-200 bg-red-50 p-6 ${className}`}
       >
         <div className="text-center">
-          <div className="text-red-400 text-lg mb-2">⚠️ Diagram Error</div>
-          <div className="text-red-300 text-sm">{error}</div>
+          <div className="text-red-600 text-lg mb-2 flex items-center justify-center gap-2">
+            ⚠️ Diagram Error
+          </div>
+          <div className="text-red-700 text-sm mb-3">{error}</div>
+          <div className="text-xs text-red-600 bg-red-100 rounded p-2 font-mono">
+            Diagram content: {diagram.substring(0, 100)}...
+          </div>
         </div>
       </motion.div>
     );
@@ -83,12 +126,13 @@ export function MermaidRenderer({ diagram, title, className = "" }: MermaidRende
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className={`rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900/80 to-slate-800/60 p-8 ${className}`}
+        className={`rounded-xl border border-slate-200 bg-slate-50 p-6 ${className}`}
       >
-        <div className="flex items-center justify-center h-64">
+        <div className="flex items-center justify-center h-48">
           <div className="text-center space-y-4">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <div className="text-slate-400">Rendering diagram...</div>
+            <div className="text-slate-600">Rendering diagram...</div>
+            {title && <div className="text-xs text-slate-500">{title}</div>}
           </div>
         </div>
       </motion.div>
@@ -99,20 +143,16 @@ export function MermaidRenderer({ diagram, title, className = "" }: MermaidRende
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900/80 to-slate-800/60 p-8 shadow-xl ${className}`}
+      className={`rounded-xl border border-slate-200 bg-white p-6 shadow-lg ${className}`}
     >
       {title && (
-        <h3 className="text-xl font-bold text-white mb-6">{title}</h3>
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">{title}</h3>
       )}
       
       <div 
         ref={containerRef}
-        className="mermaid-container overflow-auto"
+        className="mermaid-container overflow-auto bg-slate-50 rounded-lg p-4"
         dangerouslySetInnerHTML={{ __html: svg }}
-        style={{
-          filter: "brightness(1.1) contrast(1.1)",
-          background: "transparent"
-        }}
       />
       
       <style jsx>{`
@@ -126,14 +166,15 @@ export function MermaidRenderer({ diagram, title, className = "" }: MermaidRende
         .mermaid-container .node circle,
         .mermaid-container .node ellipse,
         .mermaid-container .node polygon {
-          fill: #1e293b !important;
+          fill: #f8fafc !important;
           stroke: #0ea5e9 !important;
           stroke-width: 2px !important;
         }
         
         .mermaid-container .node .label {
-          color: #ffffff !important;
-          fill: #ffffff !important;
+          color: #1e293b !important;
+          fill: #1e293b !important;
+          font-weight: 500;
         }
         
         .mermaid-container .edgePath .path {
@@ -142,8 +183,11 @@ export function MermaidRenderer({ diagram, title, className = "" }: MermaidRende
         }
         
         .mermaid-container .edgeLabel {
-          background-color: #0f172a !important;
-          color: #ffffff !important;
+          background-color: #ffffff !important;
+          color: #374151 !important;
+          border: 1px solid #d1d5db;
+          border-radius: 4px;
+          padding: 2px 6px;
         }
       `}</style>
     </motion.div>

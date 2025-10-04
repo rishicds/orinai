@@ -72,7 +72,9 @@ export async function processQueryWithMemory(
     const { executeLangChainAgent } = await import("./agents/langchain-agent");
     const dashboard = await executeLangChainAgent(enhancedQuery, userId);
     
-    console.log("[Pipeline] LangChain agent completed successfully");    // Add safety check for title length before validation
+    console.log("[Pipeline] LangChain agent completed successfully");
+    
+    // Add safety check for title length before validation
     if (dashboard.title && dashboard.title.length > 120) {
       dashboard.title = dashboard.title.substring(0, 117) + '...';
     }
@@ -98,50 +100,52 @@ export async function processQueryWithMemory(
       );
     } catch (error) {
       console.error("[Pipeline] Failed to store conversation in memory:", error);
-      // Continue without storing in memory
     }
 
     return validated;
+  } catch (langchainError) {
+    console.log("[Pipeline] LangChain agent failed, trying Gemini agent...");
     
-  } catch (error) {
-    console.error("[Pipeline] Multi-agent pipeline failed:", error);
-    console.error("[Pipeline] Error details:", error);
-    throw error;
-  }
-}
+    try {
+      // Fallback to direct Gemini agent
+      const { executeGeminiAgent } = await import("./agents/gemini-agent");
+      const dashboard = await executeGeminiAgent(enhancedQuery, userId);
+      
+      console.log("[Pipeline] Gemini agent completed successfully");
+      
+      // Add safety check for title length before validation
+      if (dashboard.title && dashboard.title.length > 120) {
+        dashboard.title = dashboard.title.substring(0, 117) + '...';
+      }
+      
+      const validated = dashboardSchema.parse(dashboard);
+      
+      // Log the query
+      await logQuery({
+        userId,
+        query,
+        responseType: validated.type,
+      });
 
-// Process query without memory features using LangChain agents
-async function processQueryWithoutMemory(
-  query: string, 
-  userId: string
-): Promise<DashboardOutput> {
-  console.log(`[Pipeline] Processing query with LangChain agents (no memory) for user ${userId}`);
-  
-  try {
-    // Use the LangChain-based agent system
-    const { executeLangChainAgent } = await import("./agents/langchain-agent");
-    const dashboard = await executeLangChainAgent(query, userId);
-    
-    // Add safety check for title length before validation
-    if (dashboard.title && dashboard.title.length > 120) {
-      dashboard.title = dashboard.title.substring(0, 117) + '...';
+      // Store the conversation in memory
+      try {
+        const responseContent = JSON.stringify(validated);
+        await userMemoryManager.processConversation(
+          userId,
+          query,
+          responseContent,
+          undefined,
+          `${validated.type}: ${validated.title}`
+        );
+      } catch (error) {
+        console.error("[Pipeline] Failed to store conversation in memory:", error);
+      }
+
+      return validated;
+    } catch (geminiError) {
+      console.error("[Pipeline] Both LangChain and Gemini agents failed:", { langchainError, geminiError });
+      throw geminiError;
     }
-    
-    const validated = dashboardSchema.parse(dashboard);
-    
-    // Log the query
-    await logQuery({
-      userId,
-      query,
-      responseType: validated.type,
-    });
-
-    return validated;
-    
-  } catch (error) {
-    console.error("[Pipeline] Multi-agent pipeline failed:", error);
-    console.error("[Pipeline] Error details:", error);
-    throw error;
   }
 }
 

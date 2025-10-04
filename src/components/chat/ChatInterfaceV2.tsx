@@ -169,7 +169,15 @@ export function ChatInterfaceV2({ onDashboardGenerated, onUserAuthenticated, ini
         onUserAuthenticated?.(user);
         
         if (data.messages && data.messages.length > 0) {
-          const formattedMessages: ChatMessage[] = data.messages.map((msg: any) => {
+          const formattedMessages: ChatMessage[] = data.messages.map((msg: { 
+            role: string; 
+            content: string; 
+            timestamp?: string;
+            dashboardData?: string;
+            $id?: string;
+            id?: string;
+            createdAt?: string;
+          }) => {
             let dashboardData = undefined;
             if (msg.dashboardData) {
               try {
@@ -220,36 +228,6 @@ export function ChatInterfaceV2({ onDashboardGenerated, onUserAuthenticated, ini
     }
   }, [initialMessages, onUserAuthenticated]);
 
-  const saveChatMessage = useCallback(async (message: ChatMessage) => {
-    if (!currentUser || !currentSessionId) {
-      console.log("Cannot save message - missing user or session:", { currentUser: !!currentUser, currentSessionId });
-      return;
-    }
-    
-    console.log("Saving message to session:", currentSessionId, message);
-    try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          role: message.role, 
-          content: message.content,
-          sessionId: currentSessionId,
-          dashboardData: message.dashboardData ? JSON.stringify(message.dashboardData) : undefined
-        })
-      });
-      
-      if (response.ok) {
-        const savedMessage = await response.json();
-        console.log("Message saved successfully:", savedMessage);
-      } else {
-        console.error("Failed to save message - server error:", response.status);
-      }
-    } catch (error) {
-      console.error("Failed to save chat message:", error);
-    }
-  }, [currentUser, currentSessionId]);
-
   const clearChatHistory = useCallback(async () => {
     if (!currentUser || !confirm("Are you sure you want to clear your chat history?")) return;
     
@@ -277,6 +255,29 @@ export function ChatInterfaceV2({ onDashboardGenerated, onUserAuthenticated, ini
   useEffect(() => {
     setCurrentSessionId(sessionId || null);
   }, [sessionId]);
+
+  // Add event listener for subsection requests
+  useEffect(() => {
+    const handleTriggerChatMessage = (event: CustomEvent<{ message: string }>) => {
+      const message = event.detail.message;
+      if (message && !isLoading) {
+        setInput(message);
+        // Auto-submit the message after a short delay
+        setTimeout(() => {
+          const form = document.querySelector('form[data-chat-form]') as HTMLFormElement;
+          if (form) {
+            form.requestSubmit();
+          }
+        }, 100);
+      }
+    };
+
+    window.addEventListener('triggerChatMessage', handleTriggerChatMessage as EventListener);
+    
+    return () => {
+      window.removeEventListener('triggerChatMessage', handleTriggerChatMessage as EventListener);
+    };
+  }, [isLoading]);
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -589,7 +590,7 @@ export function ChatInterfaceV2({ onDashboardGenerated, onUserAuthenticated, ini
     } finally {
       setIsLoading(false);
     }
-  }, [input, isLoading, onDashboardGenerated, initializeProgressSteps, simulateProgressSteps, currentUser, currentSessionId, saveChatMessage, onSessionCreated]);
+  }, [input, isLoading, onDashboardGenerated, initializeProgressSteps, simulateProgressSteps, currentUser, currentSessionId, onSessionCreated]);
 
   const handleSampleClick = useCallback((query: string) => {
     setInput(query);
@@ -683,7 +684,7 @@ export function ChatInterfaceV2({ onDashboardGenerated, onUserAuthenticated, ini
 
       {/* Input Form */}
       <div className="p-4 border-t border-slate-300 dark:border-slate-800">
-        <form onSubmit={handleSubmit} className="flex gap-2">
+        <form onSubmit={handleSubmit} data-chat-form className="flex gap-2">
           <input 
             type="text"
             value={input}

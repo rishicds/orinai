@@ -61,7 +61,12 @@ function buildComparisonNarrative(query: string): DashboardOutput {
       {
         label: "View full motorsport timeline",
         route: "/dashboard/motorsport-timeline",
-        context: {},
+        context: {
+          type: "timeline",
+          category: "motorsport",
+          teams: 8,
+          seasonYear: 2024
+        },
       },
     ],
   };
@@ -83,7 +88,12 @@ function buildChartFallback(classification: ClassificationResult, query: string)
       {
         label: "Connect data sources",
         route: "/dashboard/setup",
-        context: {},
+        context: {
+          action: "setup",
+          dataSourcesNeeded: ["Azure OpenAI", "Pinecone"],
+          currentStatus: "placeholder",
+          nextStep: "configure_apis"
+        },
       },
     ],
   };
@@ -131,7 +141,12 @@ function fallbackDashboard(classification: ClassificationResult, query: string):
         {
           label: "Enable Azure OpenAI",
           route: "/dashboard/setup/llm",
-          context: {},
+          context: {
+            service: "Azure OpenAI",
+            setupType: "llm_configuration",
+            priority: "high",
+            requiredFor: "domain_specific_insights"
+          },
         },
       ],
     } satisfies DashboardOutput;

@@ -1,8 +1,7 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { AgentExecutor, createOpenAIFunctionsAgent } from "langchain/agents";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { AgentExecutor, createOpenAIToolsAgent } from "langchain/agents";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { Tool } from "@langchain/core/tools";
-import { z } from "zod";
 import type { DashboardOutput, ClassificationResult, RetrievalResult } from "@/types";
 
 // LangChain Tool Definitions
@@ -170,8 +169,25 @@ Keep it concise and relevant.`;
         data: mockData,
         summary: `Generated ${classification.type} visualization for: ${query}`,
         sublinks: [
-          { label: "Explore Details", route: `/explore/${classification.type}`, context: {} },
-          { label: "Related Analysis", route: `/analyze/related`, context: {} }
+          { 
+            label: "Explore Details", 
+            route: `/explore/${classification.type}`, 
+            context: { 
+              type: classification.type, 
+              query: query,
+              dataPoints: mockData.length,
+              generated: new Date().toISOString()
+            } 
+          },
+          { 
+            label: "Related Analysis", 
+            route: `/analyze/related`, 
+            context: { 
+              relatedTo: classification.type,
+              originalQuery: query,
+              suggestions: ["trend analysis", "comparative study", "detailed breakdown"]
+            } 
+          }
         ]
       });
     }
@@ -232,11 +248,21 @@ export class LangChainMultiAgent {
   }
 
   async initialize() {
-    // Use a lightweight model or fallback for LangChain agent
-    const model = new ChatOpenAI({
-      modelName: "gpt-3.5-turbo",
+    // Check if Gemini API key is available (try both client and server env vars)
+    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+    
+    if (!apiKey || apiKey === "your-gemini-api-key-here") {
+      console.warn("[LangChain] No valid Gemini API key found, using direct tool chain only");
+      return; // Skip agent initialization, will use direct tool chain
+    }
+
+    console.log("[LangChain] Initializing with Gemini 2.5 Flash...");
+
+    // Use Gemini 2.5 Flash for LangChain agent
+    const model = new ChatGoogleGenerativeAI({
+      model: "gemini-2.5-flash",
       temperature: 0.1,
-      openAIApiKey: process.env.OPENAI_API_KEY || "dummy-key"
+      apiKey: apiKey
     });
 
     const prompt = ChatPromptTemplate.fromMessages([
@@ -253,7 +279,7 @@ Work step by step and return the final validated dashboard JSON.`],
     ]);
 
     try {
-      const agentRunnable = await createOpenAIFunctionsAgent({
+      const agentRunnable = await createOpenAIToolsAgent({
         llm: model,
         tools: this.tools,
         prompt
@@ -265,7 +291,7 @@ Work step by step and return the final validated dashboard JSON.`],
         verbose: true
       });
     } catch (error) {
-      console.warn("[LangChain] OpenAI agent failed, using simplified approach");
+      console.warn("[LangChain] Gemini agent failed, using simplified approach");
       // Fallback to direct tool usage
     }
   }

@@ -4,16 +4,13 @@ import Image from "next/image";
 import { useState, useCallback, useEffect } from "react";
 import type { DashboardOutput } from "@/types";
 import { InteractiveInfobox } from "../wiki/InteractiveInfobox";
-import { ExpandableSection } from "../wiki/ExpandableSection";
-import { InteractiveTimeline } from "../wiki/InteractiveTimeline";
 import { KnowledgeGraph } from "../wiki/KnowledgeGraph";
 import { WikiModeToggle } from "../wiki/WikiModeToggle";
-import { CitationPreview } from "../wiki/CitationPreview";
 import { TermHighlight } from "../wiki/TermHighlight";
 import { ChartManager } from "../charts/ChartManager";
 import { MermaidRenderer } from "../charts/MermaidRenderer";
 import { SublinksPanel, generateEnhancedSublinks } from "./SublinksPanel";
-import { visualizationService, type EnhancedDashboard, type ImageResult, type MermaidDiagram } from "../../lib/services/VisualizationService";
+import { type EnhancedDashboard, type ImageResult, type MermaidDiagram } from "../../lib/services/VisualizationService";
 
 const HEADING_KEYS = ["heading", "title", "label", "name", "category"] as const;
 const PARAGRAPH_KEYS = ["description", "summary", "text", "content", "body", "details"] as const;
@@ -93,47 +90,32 @@ interface WikiRendererProps {
 }
 
 export function WikiRenderer({ dashboard, onSubsectionRequest }: WikiRendererProps) {
-  const [wikiMode, setWikiMode] = useState<WikiMode>("detailed");
+  const [wikiMode, setWikiMode] = useState<WikiMode>("interactive");
   const [expandedSections, setExpandedSections] = useState<Set<number>>(new Set([0]));
   const [hoveredTerm] = useState<string | null>(null);
   const [enhancedDashboard, setEnhancedDashboard] = useState<EnhancedDashboard | null>(null);
   const [isLoadingVisuals, setIsLoadingVisuals] = useState(false);
+  const [activeSection, setActiveSection] = useState<number>(0);
 
   // Enhance dashboard with comprehensive visuals
   useEffect(() => {
-    const enhanceDashboard = async () => {
-      if (!dashboard.title) return;
-      
-      setIsLoadingVisuals(true);
-      try {
-        const enhanced = await visualizationService.enhanceDashboardWithVisuals(
-          dashboard, 
-          dashboard.title
-        );
-        setEnhancedDashboard(enhanced);
-      } catch (error) {
-        console.error('Error enhancing dashboard with visuals:', error);
-        // Fallback to original dashboard structure
-        setEnhancedDashboard({
-          ...dashboard,
-          mermaidDiagrams: [],
-          generatedImages: [],
-          visualEnhancements: [],
-          hasComprehensiveVisuals: false
-        });
-      }
-      setIsLoadingVisuals(false);
-    };
-
-    enhanceDashboard();
-  }, [dashboard]);
+    // Temporarily disabled to prevent infinite rendering
+    // Will be re-enabled after fixing the visualization service
+    setEnhancedDashboard({
+      ...dashboard,
+      mermaidDiagrams: [],
+      generatedImages: [],
+      visualEnhancements: [],
+      hasComprehensiveVisuals: false
+    });
+    setIsLoadingVisuals(false);
+  }, [dashboard]); // Include full dashboard dependency
 
   const blocks = Array.isArray(dashboard.data)
     ? dashboard.data.filter((entry): entry is TextBlock => !!entry && typeof entry === "object")
     : [];
 
   const hasImage = typeof dashboard.imageUrl === "string" && dashboard.imageUrl.length > 0;
-  const hasCitations = Array.isArray(dashboard.citations) && dashboard.citations.length > 0;
 
   const toggleSection = useCallback((index: number) => {
     setExpandedSections(prev => {
@@ -172,314 +154,383 @@ export function WikiRenderer({ dashboard, onSubsectionRequest }: WikiRendererPro
   };
 
   return (
-    <div className="h-full bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-hidden">
-      {/* Wiki Header */}
-      <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-b border-slate-200">
-        <div className="flex items-center justify-between p-6">
-          <div className="flex items-center gap-4">
-            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-              <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+      {/* Modern Header */}
+      <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-lg border-b border-slate-800">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-xl font-semibold text-white">
+                  {dashboard.title}
+                </h1>
+                <p className="text-slate-400 text-sm">
+                  {wikiMode === "interactive" ? "🎯 Interactive Mode" : 
+                   wikiMode === "detailed" ? "📖 Detailed View" : "⚡ Simple View"}
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">{dashboard.title}</h1>
-              <p className="text-sm text-slate-600">Interactive AI Wiki</p>
-            </div>
+            
+            <WikiModeToggle currentMode={wikiMode} onModeChange={setWikiMode} />
           </div>
-          
-          <WikiModeToggle currentMode={wikiMode} onModeChange={setWikiMode} />
         </div>
-
-        {dashboard.summary && (
-          <div className="px-6 pb-6">
-            <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
-              <TermHighlight 
-                content={dashboard.summary} 
-                terms={[]}
-                onTermClick={handleSubsectionClick}
-              />
+      </header>
+      
+      {/* Summary Section */}
+      {dashboard.summary && (
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="bg-gradient-to-r from-blue-900/20 to-purple-900/20 border border-blue-500/20 rounded-xl p-6 backdrop-blur-sm">
+            <div className="flex items-start gap-3">
+              <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
+              <div className="text-slate-300 leading-relaxed">
+                <TermHighlight 
+                  content={dashboard.summary} 
+                  terms={[]}
+                  onTermClick={handleSubsectionClick}
+                />
+              </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
-      <div className="flex h-full">
-        {/* Main Content */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-8">
-            {/* Table of Contents */}
-            {blocks.length > 1 && wikiMode !== "simple" && (
-              <div className="mb-8 bg-slate-50 rounded-lg border border-slate-200 p-6">
-                <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                  <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                  </svg>
-                  Contents
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      {/* Main Content Container */}
+      <main className="max-w-7xl mx-auto px-6 pb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          
+          {/* Content Navigation Sidebar */}
+          {blocks.length > 1 && wikiMode !== "simple" && (
+            <div className="lg:col-span-1">
+              <div className="sticky top-24">
+                <div className="bg-slate-900/50 rounded-xl border border-slate-800 p-4 backdrop-blur-sm">
+                  <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+                    <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                    </svg>
+                    Contents
+                  </h3>
+                  <nav className="space-y-2">
+                    {blocks.map((block, index) => {
+                      const heading = pickFirstString(block, HEADING_KEYS);
+                      if (!heading) return null;
+                      const isActive = activeSection === index;
+                      return (
+                        <button
+                          key={index}
+                          onClick={() => {
+                            setActiveSection(index);
+                            document.getElementById(`section-${index}`)?.scrollIntoView({ behavior: 'smooth' });
+                            if (!expandedSections.has(index)) {
+                              toggleSection(index);
+                            }
+                          }}
+                          className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all text-left group ${
+                            isActive 
+                              ? 'bg-blue-500/20 border border-blue-500/30 text-blue-200' 
+                              : 'hover:bg-slate-800/50 border border-transparent text-slate-300 hover:text-white'
+                          }`}
+                        >
+                          <span className="text-xs opacity-60">{index + 1}</span>
+                          <span className="text-sm font-medium truncate">{heading}</span>
+                        </button>
+                      );
+                    })}
+                  </nav>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Main Content Area */}
+          <div className={`${blocks.length > 1 && wikiMode !== "simple" ? 'lg:col-span-3' : 'lg:col-span-4'}`}>
+            <div className="space-y-8">
+
+              {/* Featured Image */}
+              {hasImage && (
+                <div className="relative group">
+                  <div className="overflow-hidden rounded-2xl border border-slate-700/50 bg-gradient-to-br from-slate-800/30 to-slate-900/30 shadow-2xl">
+                    <div className="aspect-video relative">
+                      <Image
+                        src={dashboard.imageUrl!}
+                        alt={dashboard.imagePrompt || dashboard.title}
+                        fill
+                        className="object-cover transition-transform group-hover:scale-105 duration-700"
+                        priority={false}
+                        unoptimized={dashboard.imageUrl!.startsWith('data:')}
+                        onError={(e) => {
+                          console.error('Image failed to load:', dashboard.imageUrl);
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent" />
+                    </div>
+                    {dashboard.imagePrompt && (
+                      <div className="p-4 bg-slate-900/80 backdrop-blur-sm">
+                        <p className="text-sm text-slate-300">{dashboard.imagePrompt}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Visualizations Section - Only show if we have actual diagrams */}
+              {enhancedDashboard && (enhancedDashboard.mermaidDiagrams.length > 0 || enhancedDashboard.generatedImages.length > 0) && (
+                <div className="space-y-6">
+                  {/* Loading indicator */}
+                  {isLoadingVisuals && (
+                    <div className="bg-slate-900/30 rounded-2xl border border-slate-700/50 p-8 backdrop-blur-sm">
+                      <div className="flex items-center justify-center space-x-4">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-400"></div>
+                        <span className="text-slate-300 text-sm">Generating visualizations...</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Generated Images */}
+                  {enhancedDashboard.generatedImages.length > 0 && (
+                    <div className="bg-slate-900/30 rounded-2xl border border-slate-700/50 p-6 backdrop-blur-sm">
+                      <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-3">
+                        <div className="w-6 h-6 bg-gradient-to-br from-pink-500 to-violet-500 rounded-lg flex items-center justify-center">
+                          <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                        Generated Visualizations
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        {enhancedDashboard.generatedImages.map((image: ImageResult, index: number) => (
+                          <div key={index} className="group cursor-pointer">
+                            <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden hover:border-blue-500/50 transition-all duration-300">
+                              <div className="aspect-video relative">
+                                <Image 
+                                  src={image.url} 
+                                  alt={image.title}
+                                  fill
+                                  className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                  unoptimized={true}
+                                  onError={(e) => {
+                                    console.error('Generated image failed to load:', image.url);
+                                    const target = e.target as HTMLImageElement;
+                                    const parent = target.parentElement;
+                                    if (parent) {
+                                      parent.innerHTML = `<div class="w-full h-full bg-slate-800 flex items-center justify-center text-slate-400 text-sm">Image failed to load</div>`;
+                                    }
+                                  }}
+                                />
+                              </div>
+                              <div className="p-4">
+                                <h4 className="font-medium text-white text-sm mb-1">{image.title}</h4>
+                                <p className="text-xs text-slate-400 line-clamp-2">{image.description}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Mermaid Diagrams */}
+                  {enhancedDashboard.mermaidDiagrams.length > 0 && (
+                    <div className="bg-slate-900/30 rounded-2xl border border-slate-700/50 p-6 backdrop-blur-sm">
+                      <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-3">
+                        <div className="w-6 h-6 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center">
+                          <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          </svg>
+                        </div>
+                        Interactive Diagrams
+                      </h3>
+                      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                        {enhancedDashboard.mermaidDiagrams.map((diagram: MermaidDiagram, index: number) => (
+                          <MermaidRenderer 
+                            key={index}
+                            diagram={diagram.diagram}
+                            title={diagram.title}
+                            className="h-64"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Content Sections */}
+              {blocks.length > 0 && (
+                <div className="space-y-6">
                   {blocks.map((block, index) => {
                     const heading = pickFirstString(block, HEADING_KEYS);
-                    if (!heading) return null;
+                    const paragraph = pickFirstString(block, PARAGRAPH_KEYS);
+                    const bullets = pickList(block);
+                    const isExpanded = expandedSections.has(index);
+
+                    if (!heading && !paragraph && (!bullets || bullets.length === 0)) {
+                      return null;
+                    }
+
                     return (
-                      <button
-                        key={index}
-                        onClick={() => {
-                          document.getElementById(`section-${index}`)?.scrollIntoView({ behavior: 'smooth' });
-                          if (!expandedSections.has(index)) {
-                            toggleSection(index);
-                          }
-                        }}
-                        className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:border-blue-300 hover:bg-blue-50 transition-all text-left group"
-                      >
-                        <span className="text-sm text-slate-500 group-hover:text-blue-600">{index + 1}.</span>
-                        <span className="text-sm text-slate-700 group-hover:text-blue-800 font-medium">{heading}</span>
-                        <svg className="w-4 h-4 text-slate-400 group-hover:text-blue-500 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </button>
+                      <div key={index} id={`section-${index}`} className="scroll-mt-24">
+                        <div className="bg-slate-900/30 rounded-2xl border border-slate-700/50 p-6 backdrop-blur-sm hover:border-slate-600/50 transition-all duration-300">
+                          {heading && (
+                            <div className="flex items-center justify-between mb-4">
+                              <h2 className="text-xl font-semibold text-white flex items-center gap-3">
+                                <span className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center text-xs text-white font-bold">
+                                  {index + 1}
+                                </span>
+                                {heading}
+                              </h2>
+                              {wikiMode !== "simple" && (
+                                <button
+                                  onClick={() => toggleSection(index)}
+                                  className="p-2 hover:bg-slate-800/50 rounded-lg transition-colors"
+                                >
+                                  <svg 
+                                    className={`w-5 h-5 text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+                                    fill="none" 
+                                    viewBox="0 0 24 24" 
+                                    stroke="currentColor"
+                                  >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                  </svg>
+                                </button>
+                              )}
+                            </div>
+                          )}
+                          
+                          {(wikiMode === "simple" || isExpanded) && (
+                            <div className="space-y-4">
+                              {paragraph && (
+                                <div className="text-slate-300 leading-relaxed">
+                                  <TermHighlight 
+                                    content={paragraph} 
+                                    terms={[]}
+                                    onTermClick={handleSubsectionClick}
+                                  />
+                                </div>
+                              )}
+                              
+                              {bullets && bullets.length > 0 && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                  {bullets.map((bullet, bulletIndex) => (
+                                    <div key={bulletIndex} className="flex items-start gap-3 p-3 bg-slate-800/30 rounded-lg border border-slate-700/50">
+                                      <div className="w-1.5 h-1.5 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
+                                      <span className="text-slate-300 text-sm">
+                                        <TermHighlight 
+                                          content={bullet} 
+                                          terms={[]}
+                                          onTermClick={handleSubsectionClick}
+                                        />
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Featured Image */}
-            {hasImage && (
-              <div className="mb-8 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 shadow-lg">
-                <Image
-                  src={dashboard.imageUrl!}
-                  alt={dashboard.imagePrompt || dashboard.title}
-                  width={1024}
-                  height={576}
-                  className="h-auto w-full object-cover"
-                  priority={false}
-                />
-                {dashboard.imagePrompt && (
-                  <div className="p-4 bg-slate-50 border-t border-slate-200">
-                    <p className="text-sm text-slate-600 italic">{dashboard.imagePrompt}</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Comprehensive Visualizations Section */}
-            {enhancedDashboard && (
-              <div className="mb-8 space-y-6">
-                {/* Loading indicator */}
-                {isLoadingVisuals && (
-                  <div className="bg-slate-50 rounded-xl border border-slate-200 p-8">
-                    <div className="flex items-center justify-center space-x-4">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                      <span className="text-slate-600">Generating comprehensive visualizations...</span>
+              {/* Data Visualization Section */}
+              {wikiMode !== "simple" && dashboard.data && dashboard.data.length > 0 && (
+                <div className="bg-slate-900/30 rounded-2xl border border-slate-700/50 p-6 backdrop-blur-sm">
+                  <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-3">
+                    <div className="w-6 h-6 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
                     </div>
+                    {wikiMode === "interactive" ? "Interactive Analytics" : "Data Insights"}
+                  </h3>
+                  <div className="bg-slate-800/30 rounded-xl p-4 border border-slate-700/50">
+                    <ChartManager dashboard={dashboard} />
                   </div>
-                )}
+                </div>
+              )}
 
-                {/* Generated Images */}
-                {enhancedDashboard.generatedImages.length > 0 && (
-                  <div className="bg-white rounded-xl border border-slate-200 shadow-lg p-6">
-                    <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                      🎨 Generated Visualizations
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {enhancedDashboard.generatedImages.map((image: ImageResult, index: number) => (
-                        <div key={index} className="border border-slate-200 rounded-lg overflow-hidden">
-                          <Image 
-                            src={image.url} 
-                            alt={image.title}
-                            width={400}
-                            height={192}
-                            className="w-full h-48 object-cover"
-                            unoptimized={true}
-                          />
-                          <div className="p-3">
-                            <h4 className="font-medium text-slate-900 text-sm">{image.title}</h4>
-                            <p className="text-xs text-slate-600 mt-1">{image.description}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+              {/* Explore More Section */}
+              <div className="bg-slate-900/30 rounded-2xl border border-slate-700/50 p-6 backdrop-blur-sm">
+                <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-3">
+                  <div className="w-6 h-6 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
+                    <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    </svg>
                   </div>
-                )}
-
-                {/* Mermaid Diagrams */}
-                {enhancedDashboard.mermaidDiagrams.length > 0 && (
-                  <div className="bg-white rounded-xl border border-slate-200 shadow-lg p-6">
-                    <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                      📊 Interactive Diagrams
-                    </h3>
-                    <div className="space-y-4">
-                      {enhancedDashboard.mermaidDiagrams.map((diagram: MermaidDiagram, index: number) => (
-                        <MermaidRenderer 
-                          key={index}
-                          diagram={diagram.diagram}
-                          title={diagram.title}
-                          className="border border-slate-200 rounded-lg"
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Visual Enhancements Status */}
-                {enhancedDashboard.hasComprehensiveVisuals && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-green-600">✅</span>
-                      <span className="text-green-800 font-medium">Comprehensive Visual Coverage Active</span>
-                    </div>
-                    <p className="text-green-700 text-sm mt-1">
-                      This response includes {enhancedDashboard.mermaidDiagrams.length} diagrams, 
-                      {enhancedDashboard.generatedImages.length} images, and interactive charts.
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Content Sections */}
-            {blocks.length > 0 && (
-              <div className="space-y-8">
-                {blocks.map((block, index) => {
-                  const heading = pickFirstString(block, HEADING_KEYS);
-                  const paragraph = pickFirstString(block, PARAGRAPH_KEYS);
-                  const bullets = pickList(block);
-                  const isExpanded = expandedSections.has(index);
-
-                  if (!heading && !paragraph && (!bullets || bullets.length === 0)) {
-                    return null;
-                  }
-
-                  return (
-                    <ExpandableSection
-                      key={index}
-                      id={`section-${index}`}
-                      heading={heading}
-                      paragraph={paragraph}
-                      bullets={bullets}
-                      isExpanded={isExpanded}
-                      onToggle={() => toggleSection(index)}
-                      onSubsectionClick={handleSubsectionClick}
-                      mode={wikiMode}
-                      index={index}
-                    />
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Interactive Timeline */}
-            {dashboard.type === "timeline" && (
-              <div className="mt-12">
-                <InteractiveTimeline 
-                  events={[]}
-                  title="Timeline"
-                  onEventClick={handleSubsectionClick}
-                />
-              </div>
-            )}
-
-            {/* Citations Section */}
-            {hasCitations && (
-              <div className="mt-12 pt-8 border-t border-slate-200">
-                <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
-                  <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  References & Sources
+                  Explore Further
                 </h3>
-                <div className="grid gap-4">
-                  <CitationPreview
-                    citations={dashboard.citations!.map(citation => ({
-                      id: citation.url,
-                      title: citation.title,
-                      url: citation.url,
-                      type: "website" as const,
-                      excerpt: citation.snippet
-                    }))}
-                    onCitationClick={(citation) => {
-                      if (citation.url) {
-                        window.open(citation.url, '_blank');
-                      }
-                    }}
+                
+                <div className="mb-6">
+                  <SublinksPanel 
+                    sublinks={generateEnhancedSublinks(dashboard.title, dashboard.data)} 
+                    onSubsectionRequest={onSubsectionRequest}
                   />
                 </div>
-              </div>
-            )}
-
-            {/* Data Visualization Section */}
-            {dashboard.data && dashboard.data.length > 0 && (
-              <div className="mt-12 pt-8 border-t border-slate-200">
-                <h3 className="text-lg font-semibold text-slate-900 mb-6 flex items-center gap-2">
-                  <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                  Interactive Data Visualization
-                </h3>
-                <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
-                  <ChartManager dashboard={dashboard} />
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {["Deep Dive", "Related Topics", "Latest Research", "Applications", "Case Studies", "Expert Analysis", "Future Trends", "Resources"].map((label) => (
+                    <button
+                      key={label}
+                      onClick={() => handleSubsectionClick(label)}
+                      className="group p-3 bg-slate-800/30 hover:bg-slate-700/50 border border-slate-700/50 hover:border-blue-500/50 rounded-xl transition-all duration-300 hover:scale-105"
+                    >
+                      <div className="flex items-center gap-2 text-slate-300 group-hover:text-white">
+                        <div className="w-2 h-2 bg-blue-400 rounded-full group-hover:bg-blue-300"></div>
+                        <span className="text-sm font-medium">{label}</span>
+                      </div>
+                    </button>
+                  ))}
                 </div>
               </div>
-            )}
-
-            {/* Enhanced Sublinks Panel */}
-            <div className="mt-12 pt-8 border-t border-slate-200">
-              <SublinksPanel 
-                sublinks={generateEnhancedSublinks(dashboard.title, dashboard.data)} 
-                onSubsectionRequest={onSubsectionRequest}
-              />
+              
             </div>
-
-            {/* Explore More Section */}
-            <div className="mt-12 pt-8 border-t border-slate-200">
-              <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                </svg>
-                Explore Related Topics
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {["Learn More", "Related Articles", "Deep Dive", "External Resources", "History", "Current Research", "Applications", "Future Prospects"].map((label) => (
-                  <button
-                    key={label}
-                    onClick={() => handleSubsectionClick(label)}
-                    className="px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 text-blue-700 rounded-lg border border-blue-200 text-sm font-medium transition-all hover:shadow-md hover:scale-105 flex items-center gap-2"
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
-                    {label}
-                  </button>
-                ))}
+          </div>
+        </div>
+        
+        {/* Quick Info Sidebar - Only show in interactive mode */}
+        {wikiMode === "interactive" && (
+          <div className="fixed top-24 right-6 w-80 z-40 hidden xl:block">
+            <div className="bg-slate-900/80 backdrop-blur-lg rounded-2xl border border-slate-700/50 p-4 space-y-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-5 h-5 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg"></div>
+                <h3 className="text-sm font-semibold text-white">Quick Info</h3>
+              </div>
+              
+              <InteractiveInfobox data={infoboxData} />
+              
+              <div className="pt-3 border-t border-slate-700/50">
+                <KnowledgeGraph 
+                  nodes={[]}
+                  title={`Knowledge Graph`}
+                  onNodeClick={handleSubsectionClick} 
+                />
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Right Sidebar - Infobox & Knowledge Graph */}
-        <div className="w-80 bg-slate-50 border-l border-slate-200 overflow-y-auto">
-          <div className="p-6 space-y-6">
-            <InteractiveInfobox data={infoboxData} />
-            <KnowledgeGraph 
-              nodes={[]}
-              title={`${dashboard.title} Knowledge Graph`}
-              onNodeClick={handleSubsectionClick} 
-            />
-          </div>
-        </div>
-      </div>
-
+        )}
+      </main>
+      
       {/* Floating Term Definition Popup */}
       {hoveredTerm && (
-        <div className="fixed bottom-4 right-4 max-w-sm bg-white border border-slate-200 rounded-lg shadow-xl p-4 z-50">
-          <h4 className="font-semibold text-slate-900 mb-2">{hoveredTerm}</h4>
-          <p className="text-sm text-slate-600">Interactive definition would appear here with AI-generated content.</p>
+        <div className="fixed bottom-6 left-6 max-w-sm bg-slate-900/95 backdrop-blur-lg border border-slate-700/50 rounded-xl shadow-2xl p-4 z-50">
+          <h4 className="font-semibold text-white mb-2">{hoveredTerm}</h4>
+          <p className="text-sm text-slate-300 mb-3">Interactive definition would appear here with AI-generated content.</p>
           <button 
             onClick={() => handleSubsectionClick(hoveredTerm)}
-            className="mt-2 text-xs text-blue-600 hover:text-blue-800 font-medium"
+            className="text-xs text-blue-400 hover:text-blue-300 font-medium flex items-center gap-1"
           >
-            Learn more →
+            Learn more
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
           </button>
         </div>
       )}

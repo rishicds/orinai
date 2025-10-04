@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import type { DashboardSublink } from "@/types";
@@ -11,7 +10,7 @@ interface SublinksPanelProps {
 }
 
 // Enhanced sublink generation with analytics and categorization
-export function generateEnhancedSublinks(topic: string, data: any[]): DashboardSublink[] {
+export function generateEnhancedSublinks(topic: string, data: Record<string, unknown>[]): DashboardSublink[] {
   const baseSublinks: DashboardSublink[] = [
     {
       label: `${topic} Overview`,
@@ -50,20 +49,20 @@ export function generateEnhancedSublinks(topic: string, data: any[]): DashboardS
   // Add data-driven sublinks
   if (data && data.length > 0) {
     const topItems = data
-      .sort((a, b) => (b.value || 0) - (a.value || 0))
+      .filter((item): item is Record<string, unknown> & { value: number; label: string } => 
+        typeof item.value === 'number' && typeof item.label === 'string')
+      .sort((a, b) => b.value - a.value)
       .slice(0, 3);
 
     topItems.forEach((item, index) => {
-      if (item.label) {
-        baseSublinks.push({
-          label: `Deep dive: ${item.label}`,
-          route: `#detail-${item.label.toLowerCase().replace(/\s+/g, "-")}`,
-          context: { type: "detail", topic: item.label, parentTopic: topic },
-          category: "details",
-          priority: 5 + index,
-          analytics: { clickable: true, trackingId: `detail-${item.label}` }
-        });
-      }
+      baseSublinks.push({
+        label: `Deep dive: ${item.label}`,
+        route: `#detail-${item.label.toLowerCase().replace(/\s+/g, "-")}`,
+        context: { type: "detail", topic: item.label, parentTopic: topic },
+        category: "details",
+        priority: 5 + index,
+        analytics: { clickable: true, trackingId: `detail-${item.label}` }
+      });
     });
   }
 
@@ -118,7 +117,9 @@ export function SublinksPanel({ sublinks, onSubsectionRequest }: SublinksPanelPr
     ? sublinks 
     : sublinks.filter(link => link.category === activeCategory);
 
-  const handleLinkClick = (link: DashboardSublink) => {
+  const handleLinkClick = (link: DashboardSublink, e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent default link navigation
+    
     setClickedLinks(prev => new Set([...prev, link.route]));
     
     // Analytics tracking
@@ -126,10 +127,31 @@ export function SublinksPanel({ sublinks, onSubsectionRequest }: SublinksPanelPr
       console.log(`Analytics: Clicked ${link.analytics.trackingId}`);
     }
 
-    // Handle in-page navigation for sublinks
-    if (link.route.startsWith("#") && onSubsectionRequest) {
+    // Handle subsection requests
+    if (onSubsectionRequest && link.context?.topic) {
       const topic = link.context.topic as string;
-      onSubsectionRequest(topic);
+      const contextType = link.context.type as string;
+      
+      // Create a more detailed query based on the context
+      let query = topic;
+      if (contextType === "overview") {
+        query = `Provide a comprehensive overview of ${topic}`;
+      } else if (contextType === "analytics") {
+        query = `Show detailed analytics and data insights for ${topic}`;
+      } else if (contextType === "trends") {
+        query = `Analyze current trends and patterns in ${topic}`;
+      } else if (contextType === "comparison") {
+        query = `Compare different aspects and alternatives of ${topic}`;
+      } else if (contextType === "detail") {
+        query = `Provide detailed information about ${topic}`;
+      } else if (contextType === "related") {
+        query = `Explore topics related to ${topic}`;
+      } else {
+        query = `Tell me more about ${topic}`;
+      }
+      
+      console.log('SublinksPanel: Triggering subsection request:', query);
+      onSubsectionRequest(query);
     }
   };
 
@@ -185,10 +207,9 @@ export function SublinksPanel({ sublinks, onSubsectionRequest }: SublinksPanelPr
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
           >
-            <Link
-              href={link.route}
-              onClick={() => handleLinkClick(link)}
-              className={`group block rounded-lg border p-3 text-sm transition-all hover:scale-105 ${
+            <button
+              onClick={(e) => handleLinkClick(link, e)}
+              className={`group block rounded-lg border p-3 text-sm transition-all hover:scale-105 w-full text-left ${
                 clickedLinks.has(link.route)
                   ? "border-blue-500 bg-blue-500/10 text-blue-400"
                   : "border-slate-700 bg-slate-800/50 text-slate-200 hover:border-blue-500 hover:text-blue-400"
@@ -209,7 +230,7 @@ export function SublinksPanel({ sublinks, onSubsectionRequest }: SublinksPanelPr
                   →
                 </div>
               </div>
-            </Link>
+            </button>
           </motion.div>
         ))}
       </div>

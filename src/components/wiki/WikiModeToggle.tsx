@@ -12,43 +12,36 @@ export function WikiModeToggle({ currentMode, onModeChange }: WikiModeToggleProp
     {
       key: "simple",
       label: "Simple",
-      icon: "📄",
-      description: "Basic overview with key points"
+      icon: "⚡",
+      description: "Quick overview"
     },
     {
       key: "detailed", 
       label: "Detailed",
-      icon: "📚",
-      description: "Comprehensive information"
+      icon: "�",
+      description: "Full analysis"
     },
     {
       key: "interactive",
       label: "Interactive",
-      icon: "🎮",
-      description: "Full interactive experience"
+      icon: "🚀",
+      description: "Live mode"
     }
   ];
 
   return (
-    <div className="bg-white rounded-lg border border-slate-200 p-4 shadow-sm">
-      <div className="flex items-center justify-between mb-3">
-        <h4 className="text-sm font-semibold text-slate-700">Wiki Mode</h4>
-        <span className="text-xs text-slate-500">
-          {modes.find(m => m.key === currentMode)?.description}
-        </span>
-      </div>
-      
-      <div className="flex gap-2">
+    <div className="bg-slate-800/50 rounded-lg border border-slate-600 p-3 backdrop-blur-sm">
+      <div className="flex gap-1">
         {modes.map((mode) => (
           <button
             key={mode.key}
             onClick={() => onModeChange(mode.key)}
             className={`
-              flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all
-              flex items-center justify-center gap-2
+              px-3 py-1.5 rounded-md text-xs font-medium transition-all
+              flex items-center gap-1.5
               ${currentMode === mode.key
-                ? "bg-blue-600 text-white shadow-md" 
-                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg" 
+                : "text-slate-300 hover:text-white hover:bg-slate-700/50"
               }
             `}
           >
@@ -58,34 +51,11 @@ export function WikiModeToggle({ currentMode, onModeChange }: WikiModeToggleProp
         ))}
       </div>
 
-      {/* Mode Features Indicator */}
-      <div className="mt-3 pt-3 border-t border-slate-200">
-        <div className="grid grid-cols-3 gap-2 text-xs">
-          <div className={`flex items-center gap-1 ${
-            currentMode === "simple" ? "text-blue-600" : "text-slate-400"
-          }`}>
-            <div className={`w-1.5 h-1.5 rounded-full ${
-              currentMode === "simple" ? "bg-blue-600" : "bg-slate-400"
-            }`}></div>
-            <span>Quick Read</span>
-          </div>
-          <div className={`flex items-center gap-1 ${
-            ["detailed", "interactive"].includes(currentMode) ? "text-blue-600" : "text-slate-400"
-          }`}>
-            <div className={`w-1.5 h-1.5 rounded-full ${
-              ["detailed", "interactive"].includes(currentMode) ? "bg-blue-600" : "bg-slate-400"
-            }`}></div>
-            <span>Full Content</span>
-          </div>
-          <div className={`flex items-center gap-1 ${
-            currentMode === "interactive" ? "text-blue-600" : "text-slate-400"
-          }`}>
-            <div className={`w-1.5 h-1.5 rounded-full ${
-              currentMode === "interactive" ? "bg-blue-600" : "bg-slate-400"
-            }`}></div>
-            <span>Interactive</span>
-          </div>
-        </div>
+      {/* Compact indicator */}
+      <div className="mt-2 text-center">
+        <span className="text-xs text-slate-400">
+          {modes.find(m => m.key === currentMode)?.description}
+        </span>
       </div>
     </div>
   );

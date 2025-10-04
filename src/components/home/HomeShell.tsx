@@ -29,12 +29,22 @@ export function HomeShell({ isAuthenticated }: HomeShellProps) {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [sidebarRefreshTrigger, setSidebarRefreshTrigger] = useState(0);
 
-  const handleSubsectionRequest = (topic: string) => {
-    console.log('Subsection requested:', topic);
-    // This will trigger a new dashboard generation for the subsection
-    setIsLoading(true);
-    // The ChatInterface should handle this request and update the dashboard
-  };
+  const handleSubsectionRequest = useCallback((topic: string) => {
+    console.log('HomeShell: Subsection requested:', topic);
+    
+    // Close the current modal
+    setShowContentModal(false);
+    
+    // Create a ref to the chat interface and trigger a new message
+    // We'll use a small delay to ensure the modal closes first
+    setTimeout(() => {
+      // Create a custom event to communicate with ChatInterface
+      const event = new CustomEvent('triggerChatMessage', { 
+        detail: { message: topic } 
+      });
+      window.dispatchEvent(event);
+    }, 100);
+  }, []);
 
   const handleDashboardGenerated = (newDashboard: DashboardOutput | null) => {
     setDashboard(newDashboard);
