@@ -3,6 +3,16 @@
 import { useCallback, useState, useEffect } from "react";
 import { MessageBubble } from "@/components/chat/MessageBubble";
 import { ProgressIndicator } from "@/components/ui/ProgressIndicator";
+import { 
+  RiRobot2Line, 
+  RiDeleteBin7Line, 
+  RiWifiLine, 
+  RiSparklingLine, 
+  RiRocketLine, 
+  RiBrainLine, 
+  RiGlobalLine,
+  RiSave3Line
+} from "react-icons/ri";
 import type { DashboardOutput } from "@/types";
 
 interface ChatMessage {
@@ -601,30 +611,81 @@ export function ChatInterfaceV2({ onDashboardGenerated, onUserAuthenticated, ini
   }, [onDashboardGenerated]);
 
   return (
-    <div className="h-full flex flex-col bg-white/60 dark:bg-slate-900/60 rounded-2xl border border-slate-300 dark:border-slate-800">
+    <div className="h-full flex flex-col rounded-3xl backdrop-blur-xl border border-white/20"
+      style={{
+        background: 'linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.1), 0 20px 40px rgba(0,0,0,0.1)'
+      }}>
       {/* Chat Header */}
-      <div className="p-4 border-b border-slate-300 dark:border-slate-800">
+      <div className="p-6 border-b border-white/10"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), 0 1px 3px rgba(0,0,0,0.1)'
+        }}>
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">AI Research Assistant</h2>
-            <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-              Comprehensive analysis powered by multiple AI services
-              {currentUser && " • Chat history saved"}
+            <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-wide flex items-center gap-3"
+              style={{ 
+                textShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                fontFamily: '"Inter", "SF Pro Display", system-ui, sans-serif',
+                letterSpacing: '0.02em'
+              }}>
+              <RiRobot2Line className="text-2xl text-purple-600" />
+              AI Research Assistant
+            </h2>
+            <p className="text-sm text-slate-600 dark:text-slate-300 mt-2 font-medium leading-relaxed"
+              style={{ 
+                textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                fontFamily: '"Inter", "SF Pro Display", system-ui, sans-serif'
+              }}>
+              Comprehensive analysis powered by <span className="text-purple-600 font-bold">multiple AI services</span>
+              {currentUser && (
+                <span className="inline-flex items-center ml-2 px-2 py-1 rounded-full text-xs font-bold gap-1"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%)',
+                    color: '#059669',
+                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1)'
+                  }}>
+                  <RiSave3Line className="text-xs" />
+                  Auto-saved
+                </span>
+              )}
             </p>
           </div>
           <div className="flex items-center gap-3">
             {currentUser && (
               <button
                 onClick={clearChatHistory}
-                className="text-xs text-slate-500 hover:text-red-500 dark:text-slate-400 dark:hover:text-red-400 transition-colors"
+                className="text-sm font-bold px-3 py-2 rounded-xl transition-all duration-300 hover:scale-105 flex items-center gap-2"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%)',
+                  color: '#dc2626',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), 0 2px 8px rgba(239, 68, 68, 0.2)',
+                  textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                  fontFamily: '"Inter", "SF Pro Display", system-ui, sans-serif'
+                }}
                 title="Clear chat history"
               >
-                Clear History
+                <RiDeleteBin7Line className="text-base" />
+                Clear
               </button>
             )}
-            <div className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-              <span className="text-xs text-slate-600 dark:text-slate-400">AI Services Active</span>
+            <div className="flex items-center gap-2 px-3 py-2 rounded-full"
+              style={{
+                background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1)'
+              }}>
+              <div className="w-2.5 h-2.5 bg-green-400 rounded-full animate-pulse"
+                style={{
+                  boxShadow: '0 0 10px rgba(34, 197, 94, 0.5)'
+                }}></div>
+              <span className="text-sm text-green-700 font-bold"
+                style={{ 
+                  textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                  fontFamily: '"Inter", "SF Pro Display", system-ui, sans-serif'
+                }}>
+                ONLINE
+              </span>
             </div>
           </div>
         </div>
@@ -633,10 +694,17 @@ export function ChatInterfaceV2({ onDashboardGenerated, onUserAuthenticated, ini
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {isLoadingHistory ? (
-          <div className="flex items-center justify-center p-8">
-            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-              <div className="w-4 h-4 border-2 border-slate-300 dark:border-slate-600 border-t-slate-600 dark:border-t-slate-300 rounded-full animate-spin"></div>
-              Loading chat history...
+          <div className="flex items-center justify-center p-12">
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-8 h-8 border-3 border-purple-300/50 border-t-purple-600 rounded-full animate-spin"></div>
+              <p className="text-lg text-slate-600 dark:text-slate-300 font-bold flex items-center gap-2"
+                style={{ 
+                  textShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                  fontFamily: '"Inter", "SF Pro Display", system-ui, sans-serif'
+                }}>
+                <RiSparklingLine className="text-xl text-purple-600" />
+                Loading your conversations...
+              </p>
             </div>
           </div>
         ) : (
@@ -652,10 +720,21 @@ export function ChatInterfaceV2({ onDashboardGenerated, onUserAuthenticated, ini
               </MessageBubble>
             ))}
             {isLoading && (
-              <div className="bg-slate-200 dark:bg-slate-800/50 rounded-lg p-4 border border-slate-300 dark:border-slate-700">
-                <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400 text-sm mb-3">
-                  <div className="w-4 h-4 border-2 border-blue-600/30 dark:border-blue-400/30 border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin"></div>
-                  Processing your request...
+              <div className="rounded-2xl p-6 border border-white/20"
+                style={{
+                  background: 'linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), 0 4px 20px rgba(0,0,0,0.1)'
+                }}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-5 h-5 border-2 border-purple-300/50 border-t-purple-600 rounded-full animate-spin"></div>
+                  <span className="text-lg font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2"
+                    style={{ 
+                      textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                      fontFamily: '"Inter", "SF Pro Display", system-ui, sans-serif'
+                    }}>
+                    <RiRocketLine className="text-xl text-purple-600" />
+                    Processing your request...
+                  </span>
                 </div>
                 <ProgressIndicator steps={progressSteps} className="text-sm" />
               </div>
@@ -666,16 +745,49 @@ export function ChatInterfaceV2({ onDashboardGenerated, onUserAuthenticated, ini
 
       {/* Sample Queries */}
       {messages.length === 1 && !isLoading && !isLoadingHistory && (
-        <div className="p-4 border-t border-slate-300 dark:border-slate-800">
-          <p className="text-xs text-slate-500 dark:text-slate-500 mb-3 uppercase tracking-wide font-medium">Try these examples:</p>
-          <div className="grid grid-cols-1 gap-2">
-            {sampleQueries.map((query) => (
+        <div className="p-6 border-t border-white/10"
+          style={{
+            background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1)'
+          }}>
+          <p className="text-sm font-black uppercase tracking-wider mb-4 text-center flex items-center justify-center gap-2"
+            style={{
+              background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.8) 0%, rgba(118, 75, 162, 0.8) 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              textShadow: '0 1px 3px rgba(0,0,0,0.1)',
+              fontFamily: '"Inter", "SF Pro Display", system-ui, sans-serif',
+              letterSpacing: '0.1em'
+            }}>
+            <RiSparklingLine className="text-base text-purple-600" style={{ WebkitTextFillColor: '#8b5cf6' }} />
+            Try These Examples
+          </p>
+          <div className="grid grid-cols-1 gap-3">
+            {sampleQueries.map((query, index) => (
               <button
                 key={query}
                 onClick={() => handleSampleClick(query)}
-                className="text-left rounded-lg bg-slate-200 dark:bg-slate-800/50 hover:bg-slate-300 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700/50 hover:border-blue-500 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-300 transition-all duration-200"
+                className="text-left rounded-2xl px-4 py-3 transition-all duration-300 hover:scale-[1.02] transform group"
+                style={{
+                  background: 'linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 10px rgba(0,0,0,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)'
+                }}
               >
-                {query}
+                <div className="flex items-center gap-3">
+                  <span className="text-lg text-purple-600">
+                    {index === 0 && <RiBrainLine />}
+                    {index === 1 && <RiGlobalLine />}
+                    {index === 2 && <RiRobot2Line />}
+                    {index === 3 && <RiRocketLine />}
+                  </span>
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-purple-600 transition-colors"
+                    style={{ 
+                      fontFamily: '"Inter", "SF Pro Display", system-ui, sans-serif'
+                    }}>
+                    {query}
+                  </span>
+                </div>
               </button>
             ))}
           </div>
@@ -683,22 +795,53 @@ export function ChatInterfaceV2({ onDashboardGenerated, onUserAuthenticated, ini
       )}
 
       {/* Input Form */}
-      <div className="p-4 border-t border-slate-300 dark:border-slate-800">
-        <form onSubmit={handleSubmit} data-chat-form className="flex gap-2">
+      <div className="p-6 border-t border-white/10"
+        style={{
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1)'
+        }}>
+        <form onSubmit={handleSubmit} data-chat-form className="flex gap-4">
           <input 
             type="text"
             value={input}
             onChange={e => setInput(e.target.value)}
-            placeholder="Ask about anything..."
-            className="flex-1 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/50 px-3 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+            placeholder="Ask me anything..."
+            className="flex-1 rounded-2xl px-6 py-4 text-base font-medium text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none transition-all duration-300 focus:scale-[1.02]"
+            style={{
+              background: 'linear-gradient(145deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.8) 100%)',
+              boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1), inset 0 -1px 0 rgba(255,255,255,0.8), 0 4px 20px rgba(0,0,0,0.1)',
+              border: '1px solid rgba(255,255,255,0.3)',
+              fontFamily: '"Inter", "SF Pro Display", system-ui, sans-serif'
+            }}
             disabled={isLoading}
           />
           <button 
             type="submit"
             disabled={isLoading || !input.trim()}
-            className="rounded-lg bg-blue-600 hover:bg-blue-500 disabled:bg-slate-400 dark:disabled:bg-slate-700 disabled:text-slate-600 dark:disabled:text-slate-500 px-6 py-2 text-sm font-medium text-white transition-colors"
+            className="rounded-2xl px-8 py-4 text-base font-bold text-white transition-all duration-300 hover:scale-105 transform disabled:opacity-50 disabled:scale-100"
+            style={{
+              background: isLoading || !input.trim() 
+                ? 'linear-gradient(135deg, #94a3b8 0%, #64748b 100%)'
+                : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              boxShadow: isLoading || !input.trim() 
+                ? 'inset 0 1px 0 rgba(255,255,255,0.1)'
+                : '0 8px 32px rgba(102, 126, 234, 0.3), inset 0 1px 0 rgba(255,255,255,0.2)',
+              textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+              fontFamily: '"Inter", "SF Pro Display", system-ui, sans-serif',
+              letterSpacing: '0.02em'
+            }}
           >
-            {isLoading ? "Processing..." : "Generate"}
+            {isLoading ? (
+              <span className="flex items-center gap-2">
+                <RiRocketLine className="text-lg" />
+                Processing...
+              </span>
+            ) : (
+              <span className="flex items-center gap-2">
+                <RiSparklingLine className="text-lg" />
+                Generate
+              </span>
+            )}
           </button>
         </form>
       </div>
