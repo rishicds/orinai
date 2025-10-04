@@ -92,7 +92,7 @@ export async function loginWithEmail(
   
   // Redirect after successful login (outside try-catch since redirect throws)
   const redirectTo = formData.get("redirectTo") as string;
-  redirect(redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//") ? redirectTo : "/");
+  redirect(redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//") ? redirectTo : "/chat");
 }
 
 export async function registerWithEmail(
@@ -126,7 +126,7 @@ export async function registerWithEmail(
   
   // Redirect after successful registration (outside try-catch since redirect throws)
   const redirectTo = formData.get("redirectTo") as string;
-  redirect(redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//") ? redirectTo : "/");
+  redirect(redirectTo && redirectTo.startsWith("/") && !redirectTo.startsWith("//") ? redirectTo : "/chat");
 }
 
 export async function logoutUser(): Promise<void> {

@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
     console.log("[OAuth Callback] Attempting to create session...");
     await createSessionFromOAuth(userId, secret);
     console.log("[OAuth Callback] Session created successfully");
-    const successUrl = new URL(returnTo ?? "/", origin);
+    const successUrl = new URL(returnTo ?? "/chat", origin);
     console.log("[OAuth Callback] Redirecting to success URL:", successUrl.toString());
     return NextResponse.redirect(successUrl);
   } catch (error) {

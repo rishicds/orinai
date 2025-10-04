@@ -154,22 +154,41 @@ export function WikiRenderer({ dashboard, onSubsectionRequest }: WikiRendererPro
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+    <div className="min-h-screen"
+      style={{
+        background: 'linear-gradient(135deg, rgba(215, 153, 34, 0.1) 0%, rgba(255, 254, 43, 0.05) 25%, rgba(241, 60, 32, 0.05) 50%, rgba(64, 86, 161, 0.1) 75%, rgba(197, 203, 227, 0.05) 100%)'
+      }}>
       {/* Modern Header */}
-      <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-lg border-b border-slate-800">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+      <header className="sticky top-0 z-50 backdrop-blur-xl border-b border-white/20"
+        style={{
+          background: 'linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), 0 1px 3px rgba(0,0,0,0.1)'
+        }}>
+        <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                style={{
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3), inset 0 1px 0 rgba(255,255,255,0.2)'
+                }}>
+                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
               <div>
-                <h1 className="text-xl font-semibold text-white">
+                <h1 className="text-2xl font-black text-slate-900 dark:text-white"
+                  style={{ 
+                    textShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                    fontFamily: '"Inter", "SF Pro Display", system-ui, sans-serif'
+                  }}>
                   {dashboard.title}
                 </h1>
-                <p className="text-slate-400 text-sm">
+                <p className="text-slate-600 dark:text-slate-300 text-sm font-bold"
+                  style={{ 
+                    textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                    fontFamily: '"Inter", "SF Pro Display", system-ui, sans-serif'
+                  }}>
                   {wikiMode === "interactive" ? "🎯 Interactive Mode" : 
                    wikiMode === "detailed" ? "📖 Detailed View" : "⚡ Simple View"}
                 </p>
@@ -184,10 +203,21 @@ export function WikiRenderer({ dashboard, onSubsectionRequest }: WikiRendererPro
       {/* Summary Section */}
       {dashboard.summary && (
         <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="bg-gradient-to-r from-blue-900/20 to-purple-900/20 border border-blue-500/20 rounded-xl p-6 backdrop-blur-sm">
-            <div className="flex items-start gap-3">
-              <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
-              <div className="text-slate-300 leading-relaxed">
+          <div className="rounded-3xl backdrop-blur-xl border border-white/20 p-8"
+            style={{
+              background: 'linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.1), 0 20px 40px rgba(0,0,0,0.1)'
+            }}>
+            <div className="flex items-start gap-4">
+              <div className="w-3 h-3 bg-purple-500 rounded-full mt-2 flex-shrink-0"
+                style={{
+                  boxShadow: '0 0 10px rgba(139, 92, 246, 0.5)'
+                }}></div>
+              <div className="text-slate-700 dark:text-slate-200 leading-relaxed font-medium text-lg"
+                style={{ 
+                  textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                  fontFamily: '"Inter", "SF Pro Display", system-ui, sans-serif'
+                }}>
                 <TermHighlight 
                   content={dashboard.summary} 
                   terms={[]}
@@ -207,14 +237,23 @@ export function WikiRenderer({ dashboard, onSubsectionRequest }: WikiRendererPro
           {blocks.length > 1 && wikiMode !== "simple" && (
             <div className="lg:col-span-1">
               <div className="sticky top-24">
-                <div className="bg-slate-900/50 rounded-xl border border-slate-800 p-4 backdrop-blur-sm">
-                  <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-                    <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="rounded-2xl backdrop-blur-xl border border-white/20 p-6"
+                  style={{
+                    background: 'linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)',
+                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), 0 4px 20px rgba(0,0,0,0.1)'
+                  }}>
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white mb-6 flex items-center gap-3 uppercase tracking-wider"
+                    style={{ 
+                      textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                      fontFamily: '"Inter", "SF Pro Display", system-ui, sans-serif',
+                      letterSpacing: '0.05em'
+                    }}>
+                    <svg className="w-4 h-4 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                     </svg>
                     Contents
                   </h3>
-                  <nav className="space-y-2">
+                  <nav className="space-y-3">
                     {blocks.map((block, index) => {
                       const heading = pickFirstString(block, HEADING_KEYS);
                       if (!heading) return null;
@@ -229,14 +268,37 @@ export function WikiRenderer({ dashboard, onSubsectionRequest }: WikiRendererPro
                               toggleSection(index);
                             }
                           }}
-                          className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all text-left group ${
-                            isActive 
-                              ? 'bg-blue-500/20 border border-blue-500/30 text-blue-200' 
-                              : 'hover:bg-slate-800/50 border border-transparent text-slate-300 hover:text-white'
-                          }`}
+                          className="w-full flex items-center gap-3 p-4 rounded-2xl transition-all text-left group hover:scale-[1.02] transform"
+                          style={isActive ? {
+                            background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.1) 100%)',
+                            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), 0 4px 20px rgba(102, 126, 234, 0.2), 0 1px 3px rgba(0,0,0,0.1)',
+                            border: '1px solid rgba(102, 126, 234, 0.3)'
+                          } : {
+                            background: 'linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
+                            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 10px rgba(0,0,0,0.05)',
+                            border: '1px solid transparent'
+                          }}
                         >
-                          <span className="text-xs opacity-60">{index + 1}</span>
-                          <span className="text-sm font-medium truncate">{heading}</span>
+                          <span className="text-xs font-bold px-2 py-1 rounded-full"
+                            style={{
+                              background: isActive 
+                                ? 'linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%)'
+                                : 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                              color: isActive ? '#667eea' : '#64748b'
+                            }}>
+                            {index + 1}
+                          </span>
+                          <span className={`text-sm font-bold truncate ${
+                            isActive 
+                              ? 'text-purple-700 dark:text-purple-300' 
+                              : 'text-slate-700 dark:text-slate-300 group-hover:text-purple-600'
+                          }`}
+                            style={{ 
+                              textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                              fontFamily: '"Inter", "SF Pro Display", system-ui, sans-serif'
+                            }}>
+                            {heading}
+                          </span>
                         </button>
                       );
                     })}
@@ -253,13 +315,17 @@ export function WikiRenderer({ dashboard, onSubsectionRequest }: WikiRendererPro
               {/* Featured Image */}
               {hasImage && (
                 <div className="relative group">
-                  <div className="overflow-hidden rounded-2xl border border-slate-700/50 bg-gradient-to-br from-slate-800/30 to-slate-900/30 shadow-2xl">
+                  <div className="overflow-hidden rounded-3xl border border-white/20 backdrop-blur-xl"
+                    style={{
+                      background: 'linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.1), 0 20px 40px rgba(0,0,0,0.1)'
+                    }}>
                     <div className="aspect-video relative">
                       <Image
                         src={dashboard.imageUrl!}
                         alt={dashboard.imagePrompt || dashboard.title}
                         fill
-                        className="object-cover transition-transform group-hover:scale-105 duration-700"
+                        className="object-cover transition-transform group-hover:scale-105 duration-700 rounded-3xl"
                         priority={false}
                         unoptimized={dashboard.imageUrl!.startsWith('data:')}
                         onError={(e) => {
@@ -268,11 +334,20 @@ export function WikiRenderer({ dashboard, onSubsectionRequest }: WikiRendererPro
                           target.style.display = 'none';
                         }}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent rounded-3xl" />
                     </div>
                     {dashboard.imagePrompt && (
-                      <div className="p-4 bg-slate-900/80 backdrop-blur-sm">
-                        <p className="text-sm text-slate-300">{dashboard.imagePrompt}</p>
+                      <div className="p-6 backdrop-blur-xl border-t border-white/10"
+                        style={{
+                          background: 'linear-gradient(145deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)'
+                        }}>
+                        <p className="text-sm text-slate-700 dark:text-slate-300 font-medium"
+                          style={{ 
+                            textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                            fontFamily: '"Inter", "SF Pro Display", system-ui, sans-serif'
+                          }}>
+                          {dashboard.imagePrompt}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -284,20 +359,42 @@ export function WikiRenderer({ dashboard, onSubsectionRequest }: WikiRendererPro
                 <div className="space-y-6">
                   {/* Loading indicator */}
                   {isLoadingVisuals && (
-                    <div className="bg-slate-900/30 rounded-2xl border border-slate-700/50 p-8 backdrop-blur-sm">
+                    <div className="rounded-3xl backdrop-blur-xl border border-white/20 p-8"
+                      style={{
+                        background: 'linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.1), 0 20px 40px rgba(0,0,0,0.1)'
+                      }}>
                       <div className="flex items-center justify-center space-x-4">
-                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-400"></div>
-                        <span className="text-slate-300 text-sm">Generating visualizations...</span>
+                        <div className="w-6 h-6 border-2 border-purple-300/50 border-t-purple-600 rounded-full animate-spin"></div>
+                        <span className="text-slate-700 dark:text-slate-300 text-sm font-bold"
+                          style={{ 
+                            textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                            fontFamily: '"Inter", "SF Pro Display", system-ui, sans-serif'
+                          }}>
+                          Generating visualizations...
+                        </span>
                       </div>
                     </div>
                   )}
 
                   {/* Generated Images */}
                   {enhancedDashboard.generatedImages.length > 0 && (
-                    <div className="bg-slate-900/30 rounded-2xl border border-slate-700/50 p-6 backdrop-blur-sm">
-                      <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-3">
-                        <div className="w-6 h-6 bg-gradient-to-br from-pink-500 to-violet-500 rounded-lg flex items-center justify-center">
-                          <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div className="rounded-3xl backdrop-blur-xl border border-white/20 p-8"
+                      style={{
+                        background: 'linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.1), 0 20px 40px rgba(0,0,0,0.1)'
+                      }}>
+                      <h3 className="text-xl font-black text-slate-900 dark:text-white mb-8 flex items-center gap-4"
+                        style={{ 
+                          textShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                          fontFamily: '"Inter", "SF Pro Display", system-ui, sans-serif'
+                        }}>
+                        <div className="w-8 h-8 rounded-2xl flex items-center justify-center"
+                          style={{
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3), inset 0 1px 0 rgba(255,255,255,0.2)'
+                          }}>
+                          <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                           </svg>
                         </div>
@@ -376,11 +473,23 @@ export function WikiRenderer({ dashboard, onSubsectionRequest }: WikiRendererPro
 
                     return (
                       <div key={index} id={`section-${index}`} className="scroll-mt-24">
-                        <div className="bg-slate-900/30 rounded-2xl border border-slate-700/50 p-6 backdrop-blur-sm hover:border-slate-600/50 transition-all duration-300">
+                        <div className="rounded-3xl backdrop-blur-xl border border-white/20 p-8 transition-all duration-300 hover:scale-[1.01] transform"
+                          style={{
+                            background: 'linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.1), 0 20px 40px rgba(0,0,0,0.1)'
+                          }}>
                           {heading && (
-                            <div className="flex items-center justify-between mb-4">
-                              <h2 className="text-xl font-semibold text-white flex items-center gap-3">
-                                <span className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center text-xs text-white font-bold">
+                            <div className="flex items-center justify-between mb-6">
+                              <h2 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-4"
+                                style={{ 
+                                  textShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                                  fontFamily: '"Inter", "SF Pro Display", system-ui, sans-serif'
+                                }}>
+                                <span className="w-8 h-8 rounded-2xl flex items-center justify-center text-sm text-white font-black"
+                                  style={{
+                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                    boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3), inset 0 1px 0 rgba(255,255,255,0.2)'
+                                  }}>
                                   {index + 1}
                                 </span>
                                 {heading}
@@ -388,10 +497,14 @@ export function WikiRenderer({ dashboard, onSubsectionRequest }: WikiRendererPro
                               {wikiMode !== "simple" && (
                                 <button
                                   onClick={() => toggleSection(index)}
-                                  className="p-2 hover:bg-slate-800/50 rounded-lg transition-colors"
+                                  className="p-3 rounded-2xl transition-all duration-300 hover:scale-110 transform"
+                                  style={{
+                                    background: 'linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
+                                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 10px rgba(0,0,0,0.05)'
+                                  }}
                                 >
                                   <svg 
-                                    className={`w-5 h-5 text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+                                    className={`w-5 h-5 text-purple-600 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
                                     fill="none" 
                                     viewBox="0 0 24 24" 
                                     stroke="currentColor"
@@ -404,9 +517,13 @@ export function WikiRenderer({ dashboard, onSubsectionRequest }: WikiRendererPro
                           )}
                           
                           {(wikiMode === "simple" || isExpanded) && (
-                            <div className="space-y-4">
+                            <div className="space-y-6">
                               {paragraph && (
-                                <div className="text-slate-300 leading-relaxed">
+                                <div className="text-slate-700 dark:text-slate-200 leading-relaxed text-lg font-medium"
+                                  style={{ 
+                                    textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                                    fontFamily: '"Inter", "SF Pro Display", system-ui, sans-serif'
+                                  }}>
                                   <TermHighlight 
                                     content={paragraph} 
                                     terms={[]}
@@ -416,11 +533,22 @@ export function WikiRenderer({ dashboard, onSubsectionRequest }: WikiRendererPro
                               )}
                               
                               {bullets && bullets.length > 0 && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                   {bullets.map((bullet, bulletIndex) => (
-                                    <div key={bulletIndex} className="flex items-start gap-3 p-3 bg-slate-800/30 rounded-lg border border-slate-700/50">
-                                      <div className="w-1.5 h-1.5 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
-                                      <span className="text-slate-300 text-sm">
+                                    <div key={bulletIndex} className="flex items-start gap-4 p-5 rounded-2xl border border-white/10"
+                                      style={{
+                                        background: 'linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
+                                        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 10px rgba(0,0,0,0.05)'
+                                      }}>
+                                      <div className="w-2 h-2 bg-purple-500 rounded-full mt-2 flex-shrink-0"
+                                        style={{
+                                          boxShadow: '0 0 10px rgba(139, 92, 246, 0.5)'
+                                        }}></div>
+                                      <span className="text-slate-700 dark:text-slate-300 text-base font-medium leading-relaxed"
+                                        style={{ 
+                                          textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                                          fontFamily: '"Inter", "SF Pro Display", system-ui, sans-serif'
+                                        }}>
                                         <TermHighlight 
                                           content={bullet} 
                                           terms={[]}
@@ -442,26 +570,54 @@ export function WikiRenderer({ dashboard, onSubsectionRequest }: WikiRendererPro
 
               {/* Data Visualization Section */}
               {wikiMode !== "simple" && dashboard.data && dashboard.data.length > 0 && (
-                <div className="bg-slate-900/30 rounded-2xl border border-slate-700/50 p-6 backdrop-blur-sm">
-                  <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-3">
-                    <div className="w-6 h-6 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center">
-                      <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="rounded-3xl backdrop-blur-xl border border-white/20 p-8"
+                  style={{
+                    background: 'linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.1), 0 20px 40px rgba(0,0,0,0.1)'
+                  }}>
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white mb-8 flex items-center gap-4"
+                    style={{ 
+                      textShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                      fontFamily: '"Inter", "SF Pro Display", system-ui, sans-serif'
+                    }}>
+                    <div className="w-8 h-8 rounded-2xl flex items-center justify-center"
+                      style={{
+                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                        boxShadow: '0 8px 32px rgba(16, 185, 129, 0.3), inset 0 1px 0 rgba(255,255,255,0.2)'
+                      }}>
+                      <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                       </svg>
                     </div>
                     {wikiMode === "interactive" ? "Interactive Analytics" : "Data Insights"}
                   </h3>
-                  <div className="bg-slate-800/30 rounded-xl p-4 border border-slate-700/50">
+                  <div className="rounded-2xl p-6 border border-white/10"
+                    style={{
+                      background: 'linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
+                      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 10px rgba(0,0,0,0.05)'
+                    }}>
                     <ChartManager dashboard={dashboard} />
                   </div>
                 </div>
               )}
 
               {/* Explore More Section */}
-              <div className="bg-slate-900/30 rounded-2xl border border-slate-700/50 p-6 backdrop-blur-sm">
-                <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-3">
-                  <div className="w-6 h-6 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg flex items-center justify-center">
-                    <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="rounded-3xl backdrop-blur-xl border border-white/20 p-8"
+                style={{
+                  background: 'linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.1), 0 20px 40px rgba(0,0,0,0.1)'
+                }}>
+                <h3 className="text-xl font-black text-slate-900 dark:text-white mb-8 flex items-center gap-4"
+                  style={{ 
+                    textShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                    fontFamily: '"Inter", "SF Pro Display", system-ui, sans-serif'
+                  }}>
+                  <div className="w-8 h-8 rounded-2xl flex items-center justify-center"
+                    style={{
+                      background: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)',
+                      boxShadow: '0 8px 32px rgba(249, 115, 22, 0.3), inset 0 1px 0 rgba(255,255,255,0.2)'
+                    }}>
+                    <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                     </svg>
                   </div>
@@ -475,16 +631,29 @@ export function WikiRenderer({ dashboard, onSubsectionRequest }: WikiRendererPro
                   />
                 </div>
                 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {["Deep Dive", "Related Topics", "Latest Research", "Applications", "Case Studies", "Expert Analysis", "Future Trends", "Resources"].map((label) => (
                     <button
                       key={label}
                       onClick={() => handleSubsectionClick(label)}
-                      className="group p-3 bg-slate-800/30 hover:bg-slate-700/50 border border-slate-700/50 hover:border-blue-500/50 rounded-xl transition-all duration-300 hover:scale-105"
+                      className="group p-4 rounded-2xl transition-all duration-300 hover:scale-105 transform border border-white/10 hover:border-purple-300/30"
+                      style={{
+                        background: 'linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
+                        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 10px rgba(0,0,0,0.05)'
+                      }}
                     >
-                      <div className="flex items-center gap-2 text-slate-300 group-hover:text-white">
-                        <div className="w-2 h-2 bg-blue-400 rounded-full group-hover:bg-blue-300"></div>
-                        <span className="text-sm font-medium">{label}</span>
+                      <div className="flex items-center gap-3 text-slate-700 dark:text-slate-300 group-hover:text-purple-600">
+                        <div className="w-2 h-2 bg-purple-500 rounded-full group-hover:bg-purple-400"
+                          style={{
+                            boxShadow: '0 0 8px rgba(139, 92, 246, 0.4)'
+                          }}></div>
+                        <span className="text-sm font-bold"
+                          style={{ 
+                            textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                            fontFamily: '"Inter", "SF Pro Display", system-ui, sans-serif'
+                          }}>
+                          {label}
+                        </span>
                       </div>
                     </button>
                   ))}
@@ -498,10 +667,28 @@ export function WikiRenderer({ dashboard, onSubsectionRequest }: WikiRendererPro
         {/* Quick Info Sidebar - Only show in interactive mode */}
         {wikiMode === "interactive" && (
           <div className="fixed top-24 right-6 w-80 z-40 hidden xl:block">
-            <div className="bg-slate-900/80 backdrop-blur-lg rounded-2xl border border-slate-700/50 p-4 space-y-4">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-5 h-5 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg"></div>
-                <h3 className="text-sm font-semibold text-white">Quick Info</h3>
+            <div className="rounded-3xl backdrop-blur-xl border border-white/20 p-6 space-y-6"
+              style={{
+                background: 'linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.1), 0 20px 40px rgba(0,0,0,0.1)'
+              }}>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-6 h-6 rounded-2xl flex items-center justify-center"
+                  style={{
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    boxShadow: '0 8px 32px rgba(16, 185, 129, 0.3), inset 0 1px 0 rgba(255,255,255,0.2)'
+                  }}>
+                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                </div>
+                <h3 className="text-base font-black text-slate-900 dark:text-white"
+                  style={{ 
+                    textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                    fontFamily: '"Inter", "SF Pro Display", system-ui, sans-serif'
+                  }}>
+                  Quick Info
+                </h3>
               </div>
               
               <InteractiveInfobox data={infoboxData} />

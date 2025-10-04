@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 
   try {
     await createSessionFromOAuth(userId, secret);
-    const successUrl = new URL(returnTo ?? "/", origin);
+    const successUrl = new URL(returnTo ?? "/chat", origin);
     return NextResponse.redirect(successUrl);
   } catch (error) {
     console.error("[Auth] Failed to finalize OAuth session", error);
