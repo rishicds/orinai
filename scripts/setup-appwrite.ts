@@ -24,6 +24,7 @@ if (!endpoint || !projectId || !apiKey) {
 
 const databaseId = process.env.APPWRITE_DATABASE_ID ?? "orinai";
 const collectionId = process.env.APPWRITE_COLLECTION_QUERIES ?? "queries";
+const userChatCollectionId = process.env.APPWRITE_COLLECTION_USER_CHAT ?? "user_chat";
 
 const client = new Client().setEndpoint(endpoint).setProject(projectId).setKey(apiKey);
 const databases = new Databases(client);
@@ -42,33 +43,33 @@ async function ensureDatabase() {
   }
 }
 
-async function ensureCollection() {
+async function ensureCollection(collectionName: string, collectionDisplayName?: string) {
   try {
-    await databases.getCollection(databaseId, collectionId);
-    console.log(`Collection '${collectionId}' already exists.`);
+    await databases.getCollection(databaseId, collectionName);
+    console.log(`Collection '${collectionName}' already exists.`);
   } catch (error) {
     if (error instanceof AppwriteException && error.code === 404) {
       await databases.createCollection(
         databaseId,
-        collectionId,
-        collectionId,
+        collectionName,
+        collectionDisplayName || collectionName,
         [Permission.read(Role.users()), Permission.create(Role.users())],
         true
       );
-      console.log(`Created collection '${collectionId}'.`);
+      console.log(`Created collection '${collectionName}'.`);
     } else {
       throw error;
     }
   }
 }
 
-async function ensureAttribute(action: () => Promise<unknown>, label: string) {
+async function ensureAttribute(collectionName: string, action: () => Promise<unknown>, label: string) {
   try {
     await action();
-    console.log(`Created attribute '${label}'.`);
+    console.log(`Created attribute '${label}' in collection '${collectionName}'.`);
   } catch (error) {
     if (error instanceof AppwriteException && error.code === 409) {
-      console.log(`Attribute '${label}' already exists.`);
+      console.log(`Attribute '${label}' already exists in collection '${collectionName}'.`);
     } else {
       throw error;
     }
@@ -76,17 +77,18 @@ async function ensureAttribute(action: () => Promise<unknown>, label: string) {
 }
 
 async function ensureIndex(
+  collectionName: string,
   key: string,
   type: IndexType,
   attributes: string[],
   orders: ("ASC" | "DESC")[]
 ) {
   try {
-    await databases.createIndex(databaseId, collectionId, key, type, attributes, orders);
-    console.log(`Created index '${key}'.`);
+    await databases.createIndex(databaseId, collectionName, key, type, attributes, orders);
+    console.log(`Created index '${key}' in collection '${collectionName}'.`);
   } catch (error) {
     if (error instanceof AppwriteException && error.code === 409) {
-      console.log(`Index '${key}' already exists.`);
+      console.log(`Index '${key}' already exists in collection '${collectionName}'.`);
     } else {
       throw error;
     }
@@ -95,26 +97,73 @@ async function ensureIndex(
 
 async function bootstrap() {
   await ensureDatabase();
-  await ensureCollection();
+  
+  // Setup queries collection
+  await ensureCollection(collectionId, "queries");
 
   await ensureAttribute(
+    collectionId,
     () => databases.createStringAttribute(databaseId, collectionId, "userId", 64, true),
     "userId"
   );
   await ensureAttribute(
+    collectionId,
     () => databases.createStringAttribute(databaseId, collectionId, "query", 2048, true),
     "query"
   );
   await ensureAttribute(
-    () => databases.createStringAttribute(databaseId, collectionId, "responseType", 64, true, "text"),
+    collectionId,
+    () => databases.createStringAttribute(databaseId, collectionId, "responseType", 64, true),
     "responseType"
   );
   await ensureAttribute(
+    collectionId,
     () => databases.createDatetimeAttribute(databaseId, collectionId, "createdAt", true),
     "createdAt"
   );
 
-  await ensureIndex("by_user_created", IndexType.Key, ["userId", "createdAt"], ["ASC", "DESC"]);
+  await ensureIndex(collectionId, "by_user_created", IndexType.Key, ["userId", "createdAt"], ["ASC", "DESC"]);
+
+  // Setup user_chat collection
+  await ensureCollection(userChatCollectionId, "user_chat");
+
+  await ensureAttribute(
+    userChatCollectionId,
+    () => databases.createStringAttribute(databaseId, userChatCollectionId, "userId", 64, true),
+    "userId"
+  );
+  await ensureAttribute(
+    userChatCollectionId,
+    () => databases.createStringAttribute(databaseId, userChatCollectionId, "role", 20, true),
+    "role"
+  );
+  await ensureAttribute(
+    userChatCollectionId,
+    () => databases.createStringAttribute(databaseId, userChatCollectionId, "content", 4096, true),
+    "content"
+  );
+  await ensureAttribute(
+    userChatCollectionId,
+    () => databases.createDatetimeAttribute(databaseId, userChatCollectionId, "createdAt", true),
+    "createdAt"
+  );
+  await ensureAttribute(
+    userChatCollectionId,
+    () => databases.createDatetimeAttribute(databaseId, userChatCollectionId, "updatedAt", false),
+    "updatedAt"
+  );
+  await ensureAttribute(
+    userChatCollectionId,
+    () => databases.createStringAttribute(databaseId, userChatCollectionId, "sessionId", 128, false),
+    "sessionId"
+  );
+  await ensureAttribute(
+    userChatCollectionId,
+    () => databases.createStringAttribute(databaseId, userChatCollectionId, "dashboardData", 10000, false),
+    "dashboardData"
+  );
+
+  await ensureIndex(userChatCollectionId, "by_user_chat_created", IndexType.Key, ["userId", "createdAt"], ["ASC", "DESC"]);
 
   console.log("Appwrite bootstrap complete ✅");
 }
