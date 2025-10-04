@@ -45,7 +45,7 @@ export function ProgressIndicator({ steps, className = "" }: ProgressIndicatorPr
           {/* Status Icon */}
           <div className="flex-shrink-0 mt-1">
             {step.status === "pending" && (
-              <div className="w-4 h-4 rounded-full border-2 border-slate-600 bg-slate-800"></div>
+              <div className="w-4 h-4 rounded-full border-2 border-slate-400 dark:border-slate-600 bg-slate-200 dark:bg-slate-800"></div>
             )}
             {step.status === "active" && (
               <div className="w-4 h-4 rounded-full border-2 border-blue-400 bg-blue-400/20 relative">
@@ -72,15 +72,15 @@ export function ProgressIndicator({ steps, className = "" }: ProgressIndicatorPr
           {/* Step Content */}
           <div className="flex-1 min-w-0">
             <div className={`text-sm font-medium transition-colors ${
-              step.status === "active" ? "text-blue-400" :
-              step.status === "completed" ? "text-green-400" :
-              step.status === "error" ? "text-red-400" :
-              "text-slate-500"
+              step.status === "active" ? "text-blue-600 dark:text-blue-400" :
+              step.status === "completed" ? "text-green-600 dark:text-green-400" :
+              step.status === "error" ? "text-red-600 dark:text-red-400" :
+              "text-slate-600 dark:text-slate-500"
             }`}>
               {step.label}
             </div>
             {step.description && (
-              <div className="text-xs text-slate-400 mt-1">{step.description}</div>
+              <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">{step.description}</div>
             )}
           </div>
 

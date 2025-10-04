@@ -18,7 +18,7 @@ export function MessageBubble({ role, children }: MessageBubbleProps) {
           "rounded-2xl px-5 py-3 text-sm shadow-md border max-w-[85%] sm:max-w-[75%]",
           isUser
             ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white border-blue-400/30 shadow-blue-500/20"
-            : "bg-slate-800/60 backdrop-blur-sm text-slate-100 border-slate-700/50 shadow-slate-900/50"
+            : "bg-slate-100 dark:bg-slate-800/60 backdrop-blur-sm text-slate-900 dark:text-slate-100 border-slate-300 dark:border-slate-700/50 shadow-slate-300/50 dark:shadow-slate-900/50"
         )}
       >
         {children}

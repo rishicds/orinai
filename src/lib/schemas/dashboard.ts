@@ -36,7 +36,7 @@ export const dashboardSchema = z.object({
     .array(
       z.object({
         title: z.string(),
-        url: z.string().url(),
+        url: z.string().min(1), // Accept any non-empty string, we'll validate URLs later
         snippet: z.string().optional(),
       })
     )

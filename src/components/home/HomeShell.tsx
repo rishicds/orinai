@@ -1,8 +1,8 @@
 "use client";
 
-import { Suspense, useState } from "react";
-import { ChatInterface } from "@/components/chat/ChatInterface";
-import { DashboardRenderer } from "@/components/dashboard/DashboardRenderer";
+import { useState } from "react";
+import { ChatInterfaceV2 } from "@/components/chat/ChatInterfaceV2";
+import { FullscreenContentModal } from "@/components/ui/FullscreenContentModal";
 import type { DashboardOutput } from "@/types";
 
 interface HomeShellProps {
@@ -12,6 +12,7 @@ interface HomeShellProps {
 export function HomeShell({ isAuthenticated }: HomeShellProps) {
   const [dashboard, setDashboard] = useState<DashboardOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showContentModal, setShowContentModal] = useState(false);
 
   const handleSubsectionRequest = (topic: string) => {
     console.log('Subsection requested:', topic);
@@ -23,6 +24,9 @@ export function HomeShell({ isAuthenticated }: HomeShellProps) {
   const handleDashboardGenerated = (newDashboard: DashboardOutput | null) => {
     setDashboard(newDashboard);
     setIsLoading(false);
+    if (newDashboard) {
+      setShowContentModal(true);
+    }
   };
 
   if (!isAuthenticated) {
@@ -149,38 +153,20 @@ export function HomeShell({ isAuthenticated }: HomeShellProps) {
   }
 
   return (
-    <div className="flex h-[calc(100vh-12rem)] w-full gap-6">
-      {/* Left Panel - Chat Interface */}
-      <div className="w-96 flex-shrink-0">
-        <ChatInterface onDashboardGenerated={handleDashboardGenerated} />
+    <>
+      <div className="h-[calc(100vh-12rem)] w-full">
+        {/* Full width chat interface */}
+        <ChatInterfaceV2 onDashboardGenerated={handleDashboardGenerated} />
       </div>
-      
-      {/* Right Panel - Wiki Content */}
-      <div className="flex-1 overflow-hidden">
-        {dashboard ? (
-          <Suspense fallback={<div className="flex items-center justify-center h-full text-slate-400">Generating wiki content...</div>}>
-            <DashboardRenderer 
-              dashboard={dashboard} 
-              isLoading={isLoading}
-              onSubsectionRequest={handleSubsectionRequest}
-            />
-          </Suspense>
-        ) : (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center space-y-4">
-              <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
-                <svg className="w-12 h-12 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold text-white mb-2">Wiki Generator Ready</h3>
-                <p className="text-slate-400 text-sm max-w-md">Ask any question to generate a comprehensive wiki-style article with multiple sources and insights.</p>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+
+      {/* Fullscreen modal for generated content */}
+      <FullscreenContentModal
+        isOpen={showContentModal}
+        onClose={() => setShowContentModal(false)}
+        dashboard={dashboard}
+        isLoading={isLoading}
+        onSubsectionRequest={handleSubsectionRequest}
+      />
+    </>
   );
 }

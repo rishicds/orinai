@@ -9,13 +9,20 @@ export async function processQuery(query: string, userId: string): Promise<Dashb
   const classification = await classifierAgent(query);
   const context = await retrieverAgent(query, userId, classification);
   const dashboard = await summarizerAgent({ query, context, classification });
-  const validated = dashboardSchema.parse(dashboard);
+  
+  try {
+    const validated = dashboardSchema.parse(dashboard);
+    
+    await logQuery({
+      userId,
+      query,
+      responseType: validated.type,
+    });
 
-  await logQuery({
-    userId,
-    query,
-    responseType: validated.type,
-  });
-
-  return validated;
+    return validated;
+  } catch (error) {
+    console.error("[Pipeline] Validation error for dashboard:", error);
+    console.error("[Pipeline] Dashboard data that failed validation:", JSON.stringify(dashboard, null, 2));
+    throw error;
+  }
 }
