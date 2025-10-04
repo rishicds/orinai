@@ -426,9 +426,9 @@ function validateFrontendCompatibility(
  */
 function attemptAutoCorrection(
   dashboard: DashboardOutput,
-  errors: string[]
+  _errors: string[]
 ): DashboardOutput | undefined {
-  let corrected = { ...dashboard };
+  const corrected = { ...dashboard };
   let hasCorrected = false;
   
   // Auto-correct empty title

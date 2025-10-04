@@ -1,11 +1,9 @@
 import Link from "next/link";
-import { HomeShell } from "@/components/home/HomeShell";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { getUser } from "@/lib/appwrite/auth";
 import { logoutUser } from "./(auth)/actions";
 import { 
   FaRocket, 
-  FaWaveSquare, 
   FaBrain, 
   FaSearch, 
   FaFileAlt, 
@@ -18,13 +16,10 @@ import {
   FaRoute,
   FaGraduationCap,
   FaChartLine,
-  FaUsers,
   FaCode,
   FaTimes,
   FaCheck,
   FaDatabase,
-  FaDesktop,
-  FaRobot,
   FaHandPointer,
   FaPlayCircle,
   FaBookOpen
@@ -159,7 +154,7 @@ export default async function Home() {
         <div className="py-16">
           <div className="max-w-4xl mx-auto text-center bg-white/10 backdrop-blur-sm rounded-3xl p-12 border border-white/20 shadow-2xl">
             <h3 className="text-3xl lg:text-4xl font-black text-slate-900 mb-8" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>
-              "Data is everywhere, but dashboards are rigid."
+              &quot;Data is everywhere, but dashboards are rigid.&quot;
             </h3>
             <div className="grid md:grid-cols-2 gap-8 text-left">
               <div className="space-y-4">
@@ -175,7 +170,7 @@ export default async function Home() {
               <div className="space-y-4">
                 <div className="flex items-start gap-4">
                   <FaTimes className="text-red-600 text-2xl mt-1 flex-shrink-0" />
-                  <p className="text-slate-800 text-lg font-medium">Users can't easily go from raw ideas → visual answers</p>
+                  <p className="text-slate-800 text-lg font-medium">Users can&apos;t easily go from raw ideas → visual answers</p>
                 </div>
                 <div className="flex items-start gap-4">
                   <FaTimes className="text-red-600 text-2xl mt-1 flex-shrink-0" />
@@ -190,10 +185,10 @@ export default async function Home() {
         <div className="py-16">
           <div className="max-w-5xl mx-auto text-center">
             <h3 className="text-4xl lg:text-5xl font-black text-slate-900 mb-8" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.3)' }}>
-              "Dynamic dashboards powered by a 
+              &quot;Dynamic dashboards powered by a 
               <span className="text-slate-800" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.4)' }}>
                 multi-agent AI system
-              </span>"
+              </span>&quot;
             </h3>
             <p className="text-xl text-slate-800 mb-12 max-w-4xl mx-auto leading-relaxed font-semibold" style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.2)' }}>
               We built a system where AI agents collaborate like a team to transform natural language queries 
@@ -441,8 +436,8 @@ export default async function Home() {
           <div className="max-w-4xl mx-auto text-center">
             <div className="bg-gradient-to-r from-purple-500/20 to-blue-500/20 backdrop-blur-sm rounded-3xl p-12 border border-white/20 shadow-2xl">
               <blockquote className="text-2xl lg:text-3xl font-bold text-slate-900 leading-relaxed italic" style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.2)' }}>
-                "This system doesn't just answer questions — it builds the UI around your thinking. 
-                It's like having a personal analyst who designs dashboards on the fly."
+                &quot;This system doesn&apos;t just answer questions — it builds the UI around your thinking. 
+                It&apos;s like having a personal analyst who designs dashboards on the fly.&quot;
               </blockquote>
             </div>
           </div>

@@ -1,10 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { MessageBubble } from "@/components/chat/MessageBubble";
 import { 
   RiLockLine, 
-  RiSparklingLine, 
   RiChatNewLine,
   RiMessageLine
 } from "react-icons/ri";
@@ -79,7 +77,7 @@ export function ChatSidebar({ currentUser, onSessionSelect, onNewChat, className
         console.log("Session messages data:", data);
         
         if (data.messages && data.messages.length > 0) {
-          const formattedMessages: ChatMessage[] = data.messages.map((msg: any) => {
+          const formattedMessages: ChatMessage[] = data.messages.map((msg: { dashboardData?: string; role: string; content: string; $id?: string; createdAt?: string }) => {
             let dashboardData = undefined;
             if (msg.dashboardData) {
               try {

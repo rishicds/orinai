@@ -10,7 +10,7 @@ interface WikiModeToggleProps {
 }
 
 export function WikiModeToggle({ currentMode, onModeChange }: WikiModeToggleProps) {
-  const modes: { key: WikiMode; label: string; icon: React.ComponentType<any>; description: string }[] = [
+  const modes: { key: WikiMode; label: string; icon: React.ComponentType<{ className?: string }>; description: string }[] = [
     {
       key: "simple",
       label: "Simple",

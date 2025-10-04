@@ -92,7 +92,7 @@ export interface AgentExecutionState {
     startTime: Date;
     phaseTimings: Record<string, number>;
     totalTokensUsed: number;
-    agentDecisions: Record<string, any>;
+    agentDecisions: Record<string, unknown>;
   };
 }
 
@@ -350,7 +350,7 @@ export async function executeMultiAgentPipeline(
 export async function executeMultiAgentPipelineWithMonitoring(
   query: string,
   userId: string
-): Promise<{ output: DashboardOutput; summary: any }> {
+): Promise<{ output: DashboardOutput; summary: Record<string, unknown> }> {
   const orchestrator = new MultiAgentOrchestrator(query, userId);
   
   try {

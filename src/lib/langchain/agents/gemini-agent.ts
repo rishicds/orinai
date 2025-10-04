@@ -55,7 +55,7 @@ export class GeminiDashboardAgent {
       
       const result = JSON.parse(response.content as string);
       return result;
-    } catch (error) {
+    } catch (_error) {
       console.warn("[Gemini Agent] Classification failed, using fallback");
       return {
         type: "text",
@@ -69,8 +69,8 @@ export class GeminiDashboardAgent {
 
   private async generateDashboardWithContext(
     query: string, 
-    classification: any, 
-    userId: string
+    classification: { type: string; complexity: string; requiresRAG: boolean; requiresExternal: boolean; requiresImage: boolean }, 
+    _userId: string
   ): Promise<DashboardOutput> {
     const dashboardPrompt = ChatPromptTemplate.fromTemplate(`
       Create a {type} dashboard for the query: "{query}"
@@ -146,7 +146,7 @@ export class GeminiDashboardAgent {
       
       // Ensure sublinks have proper context
       if (dashboard.sublinks) {
-        dashboard.sublinks.forEach((link: any) => {
+        dashboard.sublinks.forEach((link: { context?: Record<string, unknown> } & Record<string, unknown>) => {
           if (!link.context || Object.keys(link.context).length === 0) {
             link.context = {
               type: classification.type,
@@ -160,7 +160,7 @@ export class GeminiDashboardAgent {
       
       return dashboard;
       
-    } catch (error) {
+    } catch (_error) {
       console.warn("[Gemini Agent] Dashboard generation failed, using fallback");
       
       // Fallback dashboard

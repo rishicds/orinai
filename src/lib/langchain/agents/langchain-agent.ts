@@ -33,7 +33,7 @@ Return JSON with:
       ], { intent: "classification", responseFormat: "json", temperature: 0.1 });
 
       return response.choices[0]?.message?.content || '{"type":"text","complexity":"simple","requiresRAG":false,"requiresExternal":false,"requiresImage":false}';
-    } catch (error) {
+    } catch {
       console.warn("[ClassifierTool] AI failed, using fallback classification");
       
       // Simple classification logic based on keywords
@@ -68,7 +68,7 @@ class RetrieverTool extends Tool {
     try {
       const { userMemoryManager } = await import("@/lib/memory/user-memory");
       
-      let context: RetrievalResult = { chunks: [], citations: [] };
+      const context: RetrievalResult = { chunks: [], citations: [] };
       
       // Try user memory first if RAG is needed
       if (classification.requiresRAG && userId) {
@@ -151,7 +151,7 @@ Keep it concise and relevant.`;
           sublinks: []
         });
       }
-    } catch (error) {
+    } catch {
       console.warn("[SummarizerTool] Azure model failed, using fallback generation");
       
       // Generate mock data for testing/fallback
@@ -223,7 +223,7 @@ class ValidatorTool extends Tool {
         errors,
         dashboard
       });
-    } catch (error) {
+    } catch {
       return JSON.stringify({
         isValid: false,
         errors: ["Invalid JSON format"],
@@ -290,7 +290,7 @@ Work step by step and return the final validated dashboard JSON.`],
         tools: this.tools,
         verbose: true
       });
-    } catch (error) {
+    } catch {
       console.warn("[LangChain] Gemini agent failed, using simplified approach");
       // Fallback to direct tool usage
     }
