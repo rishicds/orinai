@@ -1,9 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useRef } from "react";
 import { ChatInterfaceV2 } from "@/components/chat/ChatInterfaceV2";
+import { ChatSidebar } from "@/components/chat/ChatSidebar";
 import { FullscreenContentModal } from "@/components/ui/FullscreenContentModal";
 import type { DashboardOutput } from "@/types";
+
+interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  $id?: string;
+  createdAt?: string;
+  dashboardData?: DashboardOutput;
+}
 
 interface HomeShellProps {
   isAuthenticated: boolean;
@@ -13,6 +23,11 @@ export function HomeShell({ isAuthenticated }: HomeShellProps) {
   const [dashboard, setDashboard] = useState<DashboardOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showContentModal, setShowContentModal] = useState(false);
+  const [currentUser, setCurrentUser] = useState<{ id: string } | null>(null);
+  const [chatInterfaceKey, setChatInterfaceKey] = useState(0);
+  const [selectedSessionMessages, setSelectedSessionMessages] = useState<ChatMessage[] | undefined>(undefined);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [sidebarRefreshTrigger, setSidebarRefreshTrigger] = useState(0);
 
   const handleSubsectionRequest = (topic: string) => {
     console.log('Subsection requested:', topic);
@@ -28,6 +43,34 @@ export function HomeShell({ isAuthenticated }: HomeShellProps) {
       setShowContentModal(true);
     }
   };
+
+  const handleSessionSelect = useCallback((messages: ChatMessage[], sessionId: string) => {
+    // Set selected session messages and session ID, then force re-render of ChatInterface
+    setSelectedSessionMessages(messages);
+    setCurrentSessionId(sessionId);
+    setChatInterfaceKey(prev => prev + 1);
+  }, []);
+
+  const handleNewChat = useCallback(() => {
+    // Start a new chat session by generating a new session ID and clearing state
+    const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    setCurrentSessionId(newSessionId);
+    setSelectedSessionMessages(undefined);
+    setDashboard(null);
+    setShowContentModal(false);
+    setChatInterfaceKey(prev => prev + 1);
+  }, []);
+
+  const handleUserAuthenticated = useCallback((user: { id: string } | null) => {
+    setCurrentUser(user);
+  }, []);
+
+  const handleSessionCreated = useCallback((sessionId: string) => {
+    // This will be called when a new session is created with the first message
+    console.log("HomeShell: New session created, triggering sidebar refresh:", sessionId);
+    // Trigger sidebar refresh so the new session appears
+    setSidebarRefreshTrigger(prev => prev + 1);
+  }, []);
 
   if (!isAuthenticated) {
     return (
@@ -154,9 +197,27 @@ export function HomeShell({ isAuthenticated }: HomeShellProps) {
 
   return (
     <>
-      <div className="h-[calc(100vh-12rem)] w-full">
-        {/* Full width chat interface */}
-        <ChatInterfaceV2 onDashboardGenerated={handleDashboardGenerated} />
+      <div className="h-[calc(100vh-12rem)] w-full flex">
+        {/* Chat Sidebar */}
+        <ChatSidebar
+          currentUser={currentUser}
+          onSessionSelect={handleSessionSelect}
+          onNewChat={handleNewChat}
+          className="w-80 min-w-80"
+          refreshTrigger={sidebarRefreshTrigger}
+        />
+        
+        {/* Main chat interface */}
+        <div className="flex-1 min-w-0">
+          <ChatInterfaceV2 
+            key={chatInterfaceKey}
+            onDashboardGenerated={handleDashboardGenerated}
+            onUserAuthenticated={handleUserAuthenticated}
+            initialMessages={selectedSessionMessages}
+            sessionId={currentSessionId}
+            onSessionCreated={handleSessionCreated}
+          />
+        </div>
       </div>
 
       {/* Fullscreen modal for generated content */}
