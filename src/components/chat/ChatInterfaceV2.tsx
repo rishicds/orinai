@@ -334,18 +334,30 @@ export function ChatInterfaceV2({ onDashboardGenerated, onUserAuthenticated, ini
       // Start progress simulation
       const progressPromise = simulateProgressSteps();
       
-      // Make the actual API call
+      // Make the actual API call with memory enabled
       const apiPromise = fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: userMsg.content })
+        body: JSON.stringify({ 
+          query: userMsg.content,
+          useMemory: !!currentUser // Enable memory for authenticated users
+        })
       });
 
       // Wait for both to complete
       const [, res] = await Promise.all([progressPromise, apiPromise]);
 
       if (!res.ok) {
-        throw new Error(`Failed to generate: ${res.statusText}`);
+        let errorMessage = `Failed to generate: ${res.statusText}`;
+        try {
+          const errorData = await res.json();
+          if (errorData.error) {
+            errorMessage = `Generation failed: ${errorData.error}`;
+          }
+        } catch {
+          // Fallback to status text if can't parse error response
+        }
+        throw new Error(errorMessage);
       }
 
       const dashboard = await res.json();
@@ -353,74 +365,117 @@ export function ChatInterfaceV2({ onDashboardGenerated, onUserAuthenticated, ini
       // Mark all steps as completed
       setProgressSteps(prev => prev.map(step => ({ ...step, status: "completed" as const })));
       
-      // Show success and generate dashboard
-      setTimeout(() => {
-        onDashboardGenerated(dashboard);
-        const assistantMsg: ChatMessage = { 
-          id: Date.now().toString(), 
-          role: "assistant", 
-          content: dashboard.summary || "Comprehensive analysis generated successfully!",
-          dashboardData: dashboard
-        };
-        setMessages(prev => [...prev, assistantMsg]);
-        
-        // Save assistant message if user is authenticated - use activeSessionId to ensure we have the current session
-        if (currentUser && activeSessionId) {
-          console.log("Saving assistant message to session:", activeSessionId);
-          // Create a temporary save function that uses activeSessionId directly
-          const saveAssistantMessage = async (message: ChatMessage) => {
-            try {
-              let dashboardDataJson = message.dashboardData ? JSON.stringify(message.dashboardData) : undefined;
-              
-              // Check if dashboard data is too large for database (10000 char limit)
-              if (dashboardDataJson && dashboardDataJson.length > 9500 && message.dashboardData) {
-                console.warn("Dashboard data too large, creating compact version");
-                // Create a compact version with essential data only
-                const compactDashboard = {
-                  type: message.dashboardData.type,
-                  title: message.dashboardData.title,
-                  summary: message.dashboardData.summary,
-                  data: message.dashboardData.data?.slice(0, 10), // Limit data points
-                  config: message.dashboardData.config,
-                };
-                dashboardDataJson = JSON.stringify(compactDashboard);
-              }
-              
-              console.log("Saving assistant message with dashboard data:", {
-                role: message.role,
-                content: message.content.substring(0, 100) + "...",
-                sessionId: activeSessionId,
-                hasDashboardData: !!dashboardDataJson,
-                dashboardDataSize: dashboardDataJson ? dashboardDataJson.length : 0
-              });
-              
-              const response = await fetch("/api/chat", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ 
-                  role: message.role, 
-                  content: message.content,
-                  sessionId: activeSessionId,
-                  dashboardData: dashboardDataJson
-                })
-              });
-              
-              if (response.ok) {
-                const savedMessage = await response.json();
-                console.log("Assistant message saved successfully:", savedMessage);
-              } else {
-                console.error("Failed to save assistant message - server error:", response.status);
-              }
-            } catch (error) {
-              console.error("Failed to save assistant message:", error);
-            }
+      // Check if this is a memory-based response
+      if (dashboard.isFromMemory) {
+        // For memory responses, just show the answer directly without dashboard
+        setTimeout(() => {
+          const assistantMsg: ChatMessage = { 
+            id: Date.now().toString(), 
+            role: "assistant", 
+            content: dashboard.summary || "Here's what I remember about that topic."
           };
+          setMessages(prev => [...prev, assistantMsg]);
           
-          saveAssistantMessage(assistantMsg);
-        }
-        
-        setProgressSteps([]);
-      }, 1000);
+          // Save assistant message if user is authenticated
+          if (currentUser && activeSessionId) {
+            console.log("Saving memory-based response to session:", activeSessionId);
+            const saveAssistantMessage = async (message: ChatMessage) => {
+              try {
+                const response = await fetch("/api/chat", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ 
+                    role: message.role, 
+                    content: message.content,
+                    sessionId: activeSessionId
+                  })
+                });
+                
+                if (response.ok) {
+                  console.log("Memory-based response saved successfully");
+                } else {
+                  console.error("Failed to save memory-based response");
+                }
+              } catch (error) {
+                console.error("Failed to save memory-based response:", error);
+              }
+            };
+            
+            saveAssistantMessage(assistantMsg);
+          }
+          
+          setProgressSteps([]);
+        }, 1000);
+      } else {
+        // Show success and generate dashboard for new content
+        setTimeout(() => {
+          onDashboardGenerated(dashboard);
+          const assistantMsg: ChatMessage = { 
+            id: Date.now().toString(), 
+            role: "assistant", 
+            content: dashboard.summary || "Comprehensive analysis generated successfully!",
+            dashboardData: dashboard
+          };
+          setMessages(prev => [...prev, assistantMsg]);
+          
+          // Save assistant message if user is authenticated - use activeSessionId to ensure we have the current session
+          if (currentUser && activeSessionId) {
+            console.log("Saving assistant message to session:", activeSessionId);
+            // Create a temporary save function that uses activeSessionId directly
+            const saveAssistantMessage = async (message: ChatMessage) => {
+              try {
+                let dashboardDataJson = message.dashboardData ? JSON.stringify(message.dashboardData) : undefined;
+                
+                // Check if dashboard data is too large for database (10000 char limit)
+                if (dashboardDataJson && dashboardDataJson.length > 9500 && message.dashboardData) {
+                  console.warn("Dashboard data too large, creating compact version");
+                  // Create a compact version with essential data only
+                  const compactDashboard = {
+                    type: message.dashboardData.type,
+                    title: message.dashboardData.title,
+                    summary: message.dashboardData.summary,
+                    data: message.dashboardData.data?.slice(0, 10), // Limit data points
+                    config: message.dashboardData.config,
+                  };
+                  dashboardDataJson = JSON.stringify(compactDashboard);
+                }
+                
+                console.log("Saving assistant message with dashboard data:", {
+                  role: message.role,
+                  content: message.content.substring(0, 100) + "...",
+                  sessionId: activeSessionId,
+                  hasDashboardData: !!dashboardDataJson,
+                  dashboardDataSize: dashboardDataJson ? dashboardDataJson.length : 0
+                });
+                
+                const response = await fetch("/api/chat", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ 
+                    role: message.role, 
+                    content: message.content,
+                    sessionId: activeSessionId,
+                    dashboardData: dashboardDataJson
+                  })
+                });
+                
+                if (response.ok) {
+                  const savedMessage = await response.json();
+                  console.log("Assistant message saved successfully:", savedMessage);
+                } else {
+                  console.error("Failed to save assistant message - server error:", response.status);
+                }
+              } catch (error) {
+                console.error("Failed to save assistant message:", error);
+              }
+            };
+            
+            saveAssistantMessage(assistantMsg);
+          }
+          
+          setProgressSteps([]);
+        }, 1000);
+      }
 
     } catch (error) {
       console.error("Generation error:", error);

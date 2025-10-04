@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { DashboardOutput } from "@/types";
 import { InteractiveInfobox } from "../wiki/InteractiveInfobox";
 import { ExpandableSection } from "../wiki/ExpandableSection";
@@ -10,6 +10,10 @@ import { KnowledgeGraph } from "../wiki/KnowledgeGraph";
 import { WikiModeToggle } from "../wiki/WikiModeToggle";
 import { CitationPreview } from "../wiki/CitationPreview";
 import { TermHighlight } from "../wiki/TermHighlight";
+import { ChartManager } from "../charts/ChartManager";
+import { MermaidRenderer } from "../charts/MermaidRenderer";
+import { SublinksPanel, generateEnhancedSublinks } from "./SublinksPanel";
+import { visualizationService, type EnhancedDashboard, type ImageResult, type MermaidDiagram } from "../../lib/services/VisualizationService";
 
 const HEADING_KEYS = ["heading", "title", "label", "name", "category"] as const;
 const PARAGRAPH_KEYS = ["description", "summary", "text", "content", "body", "details"] as const;
@@ -92,6 +96,37 @@ export function WikiRenderer({ dashboard, onSubsectionRequest }: WikiRendererPro
   const [wikiMode, setWikiMode] = useState<WikiMode>("detailed");
   const [expandedSections, setExpandedSections] = useState<Set<number>>(new Set([0]));
   const [hoveredTerm] = useState<string | null>(null);
+  const [enhancedDashboard, setEnhancedDashboard] = useState<EnhancedDashboard | null>(null);
+  const [isLoadingVisuals, setIsLoadingVisuals] = useState(false);
+
+  // Enhance dashboard with comprehensive visuals
+  useEffect(() => {
+    const enhanceDashboard = async () => {
+      if (!dashboard.title) return;
+      
+      setIsLoadingVisuals(true);
+      try {
+        const enhanced = await visualizationService.enhanceDashboardWithVisuals(
+          dashboard, 
+          dashboard.title
+        );
+        setEnhancedDashboard(enhanced);
+      } catch (error) {
+        console.error('Error enhancing dashboard with visuals:', error);
+        // Fallback to original dashboard structure
+        setEnhancedDashboard({
+          ...dashboard,
+          mermaidDiagrams: [],
+          generatedImages: [],
+          visualEnhancements: [],
+          hasComprehensiveVisuals: false
+        });
+      }
+      setIsLoadingVisuals(false);
+    };
+
+    enhanceDashboard();
+  }, [dashboard]);
 
   const blocks = Array.isArray(dashboard.data)
     ? dashboard.data.filter((entry): entry is TextBlock => !!entry && typeof entry === "object")
@@ -228,6 +263,81 @@ export function WikiRenderer({ dashboard, onSubsectionRequest }: WikiRendererPro
               </div>
             )}
 
+            {/* Comprehensive Visualizations Section */}
+            {enhancedDashboard && (
+              <div className="mb-8 space-y-6">
+                {/* Loading indicator */}
+                {isLoadingVisuals && (
+                  <div className="bg-slate-50 rounded-xl border border-slate-200 p-8">
+                    <div className="flex items-center justify-center space-x-4">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                      <span className="text-slate-600">Generating comprehensive visualizations...</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Generated Images */}
+                {enhancedDashboard.generatedImages.length > 0 && (
+                  <div className="bg-white rounded-xl border border-slate-200 shadow-lg p-6">
+                    <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                      🎨 Generated Visualizations
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {enhancedDashboard.generatedImages.map((image: ImageResult, index: number) => (
+                        <div key={index} className="border border-slate-200 rounded-lg overflow-hidden">
+                          <Image 
+                            src={image.url} 
+                            alt={image.title}
+                            width={400}
+                            height={192}
+                            className="w-full h-48 object-cover"
+                            unoptimized={true}
+                          />
+                          <div className="p-3">
+                            <h4 className="font-medium text-slate-900 text-sm">{image.title}</h4>
+                            <p className="text-xs text-slate-600 mt-1">{image.description}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Mermaid Diagrams */}
+                {enhancedDashboard.mermaidDiagrams.length > 0 && (
+                  <div className="bg-white rounded-xl border border-slate-200 shadow-lg p-6">
+                    <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                      📊 Interactive Diagrams
+                    </h3>
+                    <div className="space-y-4">
+                      {enhancedDashboard.mermaidDiagrams.map((diagram: MermaidDiagram, index: number) => (
+                        <MermaidRenderer 
+                          key={index}
+                          diagram={diagram.diagram}
+                          title={diagram.title}
+                          className="border border-slate-200 rounded-lg"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Visual Enhancements Status */}
+                {enhancedDashboard.hasComprehensiveVisuals && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-green-600">✅</span>
+                      <span className="text-green-800 font-medium">Comprehensive Visual Coverage Active</span>
+                    </div>
+                    <p className="text-green-700 text-sm mt-1">
+                      This response includes {enhancedDashboard.mermaidDiagrams.length} diagrams, 
+                      {enhancedDashboard.generatedImages.length} images, and interactive charts.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Content Sections */}
             {blocks.length > 0 && (
               <div className="space-y-8">
@@ -297,6 +407,29 @@ export function WikiRenderer({ dashboard, onSubsectionRequest }: WikiRendererPro
                 </div>
               </div>
             )}
+
+            {/* Data Visualization Section */}
+            {dashboard.data && dashboard.data.length > 0 && (
+              <div className="mt-12 pt-8 border-t border-slate-200">
+                <h3 className="text-lg font-semibold text-slate-900 mb-6 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                  Interactive Data Visualization
+                </h3>
+                <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+                  <ChartManager dashboard={dashboard} />
+                </div>
+              </div>
+            )}
+
+            {/* Enhanced Sublinks Panel */}
+            <div className="mt-12 pt-8 border-t border-slate-200">
+              <SublinksPanel 
+                sublinks={generateEnhancedSublinks(dashboard.title, dashboard.data)} 
+                onSubsectionRequest={onSubsectionRequest}
+              />
+            </div>
 
             {/* Explore More Section */}
             <div className="mt-12 pt-8 border-t border-slate-200">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 import { ChatInterfaceV2 } from "@/components/chat/ChatInterfaceV2";
 import { ChatSidebar } from "@/components/chat/ChatSidebar";
 import { FullscreenContentModal } from "@/components/ui/FullscreenContentModal";

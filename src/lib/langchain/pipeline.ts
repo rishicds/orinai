@@ -10,6 +10,11 @@ export async function processQuery(query: string, userId: string): Promise<Dashb
   const context = await retrieverAgent(query, userId, classification);
   const dashboard = await summarizerAgent({ query, context, classification });
   
+  // Add safety check for title length before validation
+  if (dashboard.title && dashboard.title.length > 120) {
+    dashboard.title = dashboard.title.substring(0, 117) + '...';
+  }
+  
   try {
     const validated = dashboardSchema.parse(dashboard);
     

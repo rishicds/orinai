@@ -2,6 +2,7 @@
 
 import type { DashboardOutput } from "@/types";
 import { WikiRenderer } from "./WikiRenderer";
+import { generateEnhancedSublinks } from "./SublinksPanel";
 
 interface DashboardRendererProps {
   dashboard: DashboardOutput | null;
@@ -17,9 +18,11 @@ export function DashboardRenderer({ dashboard, isLoading, onSubsectionRequest }:
           <div className="text-center space-y-4">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
             <div className="space-y-2">
-              <p className="text-lg font-semibold text-slate-700">Generating Interactive Wiki...</p>
+              <p className="text-lg font-semibold text-slate-700">Generating Interactive Wiki with Analytics...</p>
               <p className="text-sm text-slate-500">
-                Leveraging multiple AI services to create comprehensive content
+                ✨ Creating 10+ chart types with auto-detection<br/>
+                🚀 Building smart sublinks with routing<br/>
+                📊 Generating comprehensive analytics
               </p>
             </div>
           </div>
@@ -39,10 +42,16 @@ export function DashboardRenderer({ dashboard, isLoading, onSubsectionRequest }:
               </svg>
             </div>
             <div className="space-y-3">
-              <h3 className="text-xl font-semibold text-slate-800">Welcome to Interactive Wiki</h3>
+              <h3 className="text-xl font-semibold text-slate-800">Enhanced Interactive Wiki with Analytics</h3>
               <p className="text-slate-600 leading-relaxed">
-                Ask any question to generate a comprehensive, Wikipedia-style page with interactive features.
+                Ask any question to generate a comprehensive Wikipedia-style page with:
               </p>
+              <div className="text-sm text-slate-500 space-y-1">
+                <div>📊 Auto-detected chart types (10+ supported)</div>
+                <div>🔗 Smart sublinks with fast routing</div>
+                <div>📈 Real-time analytics and insights</div>
+                <div>🎯 Optimized visualizations</div>
+              </div>
             </div>
           </div>
         </div>
@@ -50,9 +59,15 @@ export function DashboardRenderer({ dashboard, isLoading, onSubsectionRequest }:
     );
   }
 
+  // Auto-enhance dashboard with sublinks if not present
+  const enhancedDashboard = {
+    ...dashboard,
+    sublinks: dashboard.sublinks || generateEnhancedSublinks(dashboard.title, dashboard.data)
+  };
+
   return (
     <WikiRenderer 
-      dashboard={dashboard} 
+      dashboard={enhancedDashboard} 
       onSubsectionRequest={onSubsectionRequest}
     />
   );

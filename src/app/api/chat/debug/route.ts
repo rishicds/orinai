@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/appwrite/auth";
 import { getUserChatHistory, getUserChatSessions } from "@/lib/appwrite/database";
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const user = await getUser();
     if (!user) {
@@ -19,7 +19,12 @@ export async function GET(request: NextRequest) {
     const sessions = await getUserChatSessions(user.id);
 
     // Group messages by date for debugging
-    const messagesByDate: { [key: string]: any[] } = {};
+    const messagesByDate: { [key: string]: Array<{
+      id: string;
+      role: string;
+      content: string;
+      timestamp: string;
+    }> } = {};
     allMessages.forEach(msg => {
       const date = new Date(msg.createdAt).toISOString().split('T')[0];
       if (!messagesByDate[date]) {

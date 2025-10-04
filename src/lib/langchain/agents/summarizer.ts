@@ -70,7 +70,7 @@ function buildComparisonNarrative(query: string): DashboardOutput {
 function buildChartFallback(classification: ClassificationResult, query: string): DashboardOutput {
   return {
     type: classification.type,
-    title: `Preview for: ${query}`,
+    title: truncateTitle(`Preview for: ${query}`),
     data: [
       { label: "Category A", value: 45 },
       { label: "Category B", value: 30 },
@@ -106,7 +106,7 @@ function fallbackDashboard(classification: ClassificationResult, query: string):
   if (textualTypes.includes(classification.type)) {
     return {
       type: classification.type,
-      title: `Narrative preview: ${query}`,
+      title: truncateTitle(`Narrative preview: ${query}`),
       data: [
         {
           heading: "Key takeaways",
@@ -164,10 +164,18 @@ async function generateWikiContent(query: string): Promise<DashboardOutput> {
   }
 }
 
+function truncateTitle(title: string, maxLength: number = 120): string {
+  if (title.length <= maxLength) {
+    return title;
+  }
+  return title.substring(0, maxLength - 3) + '...';
+}
+
 function generateWikiTitle(query: string): string {
   // Capitalize first letter and clean up the query for a nice title
   const cleaned = query.trim();
-  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  const title = cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+  return truncateTitle(title);
 }
 
 function generateSummaryFromContent(content: string): string {
@@ -333,7 +341,7 @@ Context: ${contextString}
 
 Generate dashboard JSON with:
 - type: "${classification.type}" (use this exact value)
-- title: descriptive title about "${query}"
+- title: descriptive title about "${query}" (MAX 120 characters)
 - data: ARRAY of at least 3-5 data objects with label and value
 - summary: brief explanation (optional)
 
@@ -361,6 +369,12 @@ Return ONLY the JSON:`,
 
     const raw = response.choices[0]?.message?.content ?? "";
     const parsed = JSON.parse(raw);
+    
+    // Ensure title doesn't exceed 120 characters before schema validation
+    if (parsed.title && typeof parsed.title === 'string') {
+      parsed.title = truncateTitle(parsed.title);
+    }
+    
     return dashboardSchema.parse(parsed);
   } catch (error) {
     console.error("[Summarizer] Falling back to offline dashboard", error);
